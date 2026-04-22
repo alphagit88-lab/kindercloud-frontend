@@ -12,12 +12,12 @@ export interface ClassRoom {
 
 export const classroomsAPI = {
   getAll: async (): Promise<ClassRoom[]> => {
-    const response = await api.get('/classrooms');
-    return response;
+    const response = await api.get<ClassRoom[]>('/classrooms');
+    return response.data;
   },
 
   getById: async (id: string): Promise<ClassRoom> => {
-    const response = await api.get(`/classrooms/${id}`);
-    return response;
+    const response = await api.get<ClassRoom>(`/classrooms/${id}`);
+    return response.data;
   },
 };
