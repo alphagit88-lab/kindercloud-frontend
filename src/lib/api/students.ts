@@ -26,15 +26,15 @@ export interface Student {
 
 export const studentsAPI = {
   getAll: async () => {
-    const response = await api.get<Student[]>('/students');
+    const response = await api.get<Student[]>('/api/students');
     return response.data;
   },
   create: async (data: any) => {
-    const response = await api.post('/students', data);
+    const response = await api.post('/api/students', data);
     return response.data;
   },
   delete: async (id: string) => {
-    const response = await api.delete(`/students/${id}`);
+    const response = await api.delete(`/api/students/${id}`);
     return response.data;
   }
 };

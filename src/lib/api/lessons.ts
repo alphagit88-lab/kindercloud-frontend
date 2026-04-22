@@ -28,17 +28,17 @@ export interface CreateLessonData {
 
 export const lessonsAPI = {
   logLesson: async (data: CreateLessonData): Promise<Lesson> => {
-    const response = await api.post<{ lesson: Lesson }>('/lessons', data);
+    const response = await api.post<{ lesson: Lesson }>('/api/lessons', data);
     return response.data.lesson;
   },
 
   getClassRoomLessons: async (classRoomId: string): Promise<Lesson[]> => {
-    const response = await api.get<Lesson[]>(`/lessons/classroom/${classRoomId}`);
+    const response = await api.get<Lesson[]>(`/api/lessons/classroom/${classRoomId}`);
     return response.data;
   },
 
   updateLesson: async (id: string, data: Partial<CreateLessonData>): Promise<Lesson> => {
-    const response = await api.put<{ lesson: Lesson }>(`/lessons/${id}`, data);
+    const response = await api.put<{ lesson: Lesson }>(`/api/lessons/${id}`, data);
     return response.data.lesson;
   },
 };
