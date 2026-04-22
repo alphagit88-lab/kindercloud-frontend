@@ -46,7 +46,7 @@ export interface Teacher {
 
 export const teachersAPI = {
   getAll: async (params?: any) => {
-    let endpoint = '/teachers';
+    let endpoint = '/api/teachers';
     if (params) {
       const searchParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
@@ -59,11 +59,11 @@ export const teachersAPI = {
     return response.data;
   },
   create: async (data: any) => {
-    const response = await api.post('/teachers', data);
+    const response = await api.post('/api/teachers', data);
     return response.data;
   },
   delete: async (id: string) => {
-    const response = await api.delete(`/teachers/${id}`);
+    const response = await api.delete(`/api/teachers/${id}`);
     return response.data;
   }
 };
@@ -71,7 +71,7 @@ export const teachersAPI = {
 
 
 export const getVerifiedTeachers = teachersAPI.getAll;
-export const getTeacherProfile = async (id: string) => { const res = await api.get('/teachers/' + id); return res.data; };
+export const getTeacherProfile = async (id: string) => { const res = await api.get('/api/teachers/' + id); return res.data; };
 export const getSimilarTeachers = async (id: string, limit?: number) => [];
 export const getTeacherDisplayName = (t: any) => {
   if (!t) return 'Unknown';
