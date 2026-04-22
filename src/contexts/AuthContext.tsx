@@ -12,7 +12,7 @@ interface AuthContextType {
     password: string;
     firstName: string;
     lastName: string;
-    role?: 'student' | 'instructor' | 'parent' | 'admin';
+    role?: 'kid' | 'teacher' | 'parent' | 'admin';
   }) => Promise<User>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string;
     firstName: string;
     lastName: string;
-    role?: 'student' | 'instructor' | 'parent' | 'admin';
+    role?: 'kid' | 'teacher' | 'parent' | 'admin';
   }) => {
     const response = await authAPI.register(data);
     setUser(response.user);

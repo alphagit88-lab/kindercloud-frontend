@@ -7,7 +7,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'student' | 'instructor' | 'parent' | 'admin';
+  role: 'kid' | 'teacher' | 'parent' | 'admin';
   bio: string | null;
   profilePicture: string | null;
   isActive: boolean;
@@ -22,7 +22,7 @@ export interface RegisterData {
   password: string;
   firstName: string;
   lastName: string;
-  role?: 'student' | 'instructor' | 'parent' | 'admin';
+  role?: 'kid' | 'teacher' | 'parent' | 'admin';
 }
 
 export interface LoginData {
