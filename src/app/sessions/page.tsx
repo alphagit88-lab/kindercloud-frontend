@@ -30,7 +30,7 @@ export default function StudentSessionsPage() {
     }, []);
 
     return (
-        <ProtectedRoute allowedRoles={['student']}>
+        <ProtectedRoute allowedRoles={['kid']}>
             <AppLayout>
                 <div className="mb-8">
                     <h1 className="text-3xl font-semibold text-slate-900 tracking-tight">My Live Classes</h1>

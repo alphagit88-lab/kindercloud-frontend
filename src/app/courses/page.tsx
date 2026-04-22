@@ -13,7 +13,7 @@ export default function CoursesPage() {
   const { user } = useAuth();
 
   // Instructors (and admins) can only browse — no enrollment or payment
-  const isStudent = !!(user && user.role !== 'instructor' && user.role !== 'admin');
+  const isStudent = !!(user && user.role !== 'teacher' && user.role !== 'admin');
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

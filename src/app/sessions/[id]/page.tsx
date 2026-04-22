@@ -44,7 +44,7 @@ export default function SessionDetailPage() {
     };
 
     return (
-        <ProtectedRoute allowedRoles={['student', 'instructor', 'admin']}>
+        <ProtectedRoute allowedRoles={['kid', 'teacher', 'admin']}>
             <div className="p-8 max-w-3xl mx-auto">
                 <button
                     onClick={() => router.back()}

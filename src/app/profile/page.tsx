@@ -96,7 +96,7 @@ export default function ProfilePage() {
       setLoading(true);
       setError('');
 
-      if (user.role === 'student') {
+      if (user.role === 'kid') {
         const profile = await getMyStudentProfile();
         setStudentProfile(profile);
         if (profile) {
@@ -110,7 +110,7 @@ export default function ProfilePage() {
             notes: profile.notes || '',
           });
         }
-      } else if (user.role === 'instructor') {
+      } else if (user.role === 'teacher') {
         const profile = await getMyTeacherProfile();
         setTeacherProfile(profile);
         if (profile) {
@@ -351,7 +351,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Metrics Card (For Instructors) */}
-          {user?.role === 'instructor' && teacherProfile && (
+          {user?.role === 'teacher' && teacherProfile && (
             <div className="bg-slate-900 rounded-4xl p-8 text-white">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-6">Teaching Overview</h3>
               <div className="grid grid-cols-3 gap-4">
@@ -405,7 +405,7 @@ export default function ProfilePage() {
           <div className="bg-white rounded-4xl p-8 sm:p-12 border border-slate-200">
 
             {/* STUDENT FORM */}
-            {user?.role === 'student' && (
+            {user?.role === 'kid' && (
               <form onSubmit={handleStudentSubmit} className="space-y-10">
                 <header className="border-b border-slate-100 pb-6">
                   <h2 className="text-xl font-semibold text-slate-900 tracking-tight">Academic Profile</h2>
@@ -467,7 +467,7 @@ export default function ProfilePage() {
             )}
 
             {/* TEACHER FORM */}
-            {user?.role === 'instructor' && (
+            {user?.role === 'teacher' && (
               <form onSubmit={handleTeacherSubmit} className="space-y-10">
                 <header className="border-b border-slate-100 pb-6 flex items-center justify-between">
                   <div>
@@ -537,7 +537,7 @@ export default function ProfilePage() {
             )}
 
             {/* MONETIZATION SETTINGS — instructor only */}
-            {user?.role === 'instructor' && (
+            {user?.role === 'teacher' && (
               <div className="space-y-6">
                 <header className="border-b border-slate-100 pb-6">
                   <h2 className="text-xl font-semibold text-slate-900 tracking-tight">Monetization Settings</h2>

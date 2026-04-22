@@ -50,7 +50,7 @@ const navItems: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
       </svg>
     ),
-    roles: ['student'],
+    roles: ['kid'],
   },
   {
     label: 'Recordings',
@@ -61,7 +61,7 @@ const navItems: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    roles: ['student', 'admin', 'parent'],
+    roles: ['kid', 'admin', 'parent'],
   },
   {
     label: 'My Exams',
@@ -71,7 +71,7 @@ const navItems: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
       </svg>
     ),
-    roles: ['student'],
+    roles: ['kid'],
   },
   {
     label: 'My Progress',
@@ -81,7 +81,7 @@ const navItems: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     ),
-    roles: ['student'],
+    roles: ['kid'],
   },
   {
     label: 'Bookings',
@@ -91,7 +91,7 @@ const navItems: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
     ),
-    roles: ['student', 'parent'],
+    roles: ['kid', 'parent'],
   },
   {
     label: 'My Children',
@@ -111,7 +111,7 @@ const navItems: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
       </svg>
     ),
-    roles: ['instructor'],
+    roles: ['teacher'],
   },
   {
     label: 'My Availability',
@@ -121,7 +121,7 @@ const navItems: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
     ),
-    roles: ['instructor'],
+    roles: ['teacher'],
   },
   {
     label: 'Exams',
@@ -131,7 +131,7 @@ const navItems: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
       </svg>
     ),
-    roles: ['instructor'],
+    roles: ['teacher'],
   },
   {
     label: 'Recordings',
@@ -141,7 +141,7 @@ const navItems: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.882v6.236a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
       </svg>
     ),
-    roles: ['instructor'],
+    roles: ['teacher'],
   },
 
   {
@@ -152,7 +152,7 @@ const navItems: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
       </svg>
     ),
-    roles: ['instructor'],
+    roles: ['teacher'],
   },
   {
     label: 'Analytics',
@@ -172,7 +172,7 @@ const navItems: NavItem[] = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
       </svg>
     ),
-    roles: ['student', 'instructor', 'parent'],
+    roles: ['kid', 'teacher', 'parent'],
   },
 ];
 
@@ -393,7 +393,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               <div className="h-10 w-px bg-slate-200/60 hidden sm:block" />
 
               {/* Cart Indicator */}
-              {user?.role === 'student' && cartItems.length > 0 && (
+              {user?.role === 'kid' && cartItems.length > 0 && (
                 <button 
                   onClick={() => setShowCartModal(true)}
                   className="relative flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-blue-600 text-white shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] hover:bg-blue-700 hover:shadow-[0_12px_25px_-4px_rgba(37,99,235,0.5)] transition-all group/cart group"
@@ -497,7 +497,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </div>
       </footer>
 
-      {user?.role === 'student' && cartItems.length > 0 && (
+      {user?.role === 'kid' && cartItems.length > 0 && (
         <PackageBookingModal
           isOpen={showCartModal}
           slots={cartItems}

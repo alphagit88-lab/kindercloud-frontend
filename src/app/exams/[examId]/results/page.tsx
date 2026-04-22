@@ -69,7 +69,7 @@ export default function ExamResultsPage() {
 
     if (loading) {
         return (
-            <ProtectedRoute allowedRoles={['student']}>
+            <ProtectedRoute allowedRoles={['kid']}>
                 <AppLayout>
                     <div className="flex h-[60vh] justify-center items-center">
                         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />

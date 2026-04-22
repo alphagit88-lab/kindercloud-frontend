@@ -183,7 +183,7 @@ export default function TeacherManagementPage() {
                   <div className="mt-auto pt-8 border-t border-slate-50 flex items-center justify-between">
                      <div className="flex items-center gap-2">
                         <DollarSign className="w-4 h-4 text-mint-500" />
-                        <span className="font-black text-slate-800 text-sm tracking-tight">${t.baseSalary.toLocaleString()}</span>
+                        <span className="font-black text-slate-800 text-sm tracking-tight">${(t.baseSalary ?? 0).toLocaleString()}</span>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Base</span>
                      </div>
                      <div className="flex gap-2">

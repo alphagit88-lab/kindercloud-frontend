@@ -125,7 +125,7 @@ export default function StudentBookingsPage() {
   ];
 
   return (
-    <ProtectedRoute allowedRoles={['student', 'parent', 'admin']}>
+    <ProtectedRoute allowedRoles={['kid', 'parent', 'admin']}>
       <AppLayout>
         {/* Page Header */}
         <div className="mb-6">

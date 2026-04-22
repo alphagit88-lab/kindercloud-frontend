@@ -35,7 +35,7 @@ export default function RecordingDetailPage() {
     }, [id]);
 
     return (
-        <ProtectedRoute allowedRoles={['student', 'instructor', 'admin', 'parent']}>
+        <ProtectedRoute allowedRoles={['kid', 'teacher', 'admin', 'parent']}>
             <AppLayout>
                 <div className="p-8 max-w-5xl mx-auto">
                     <button

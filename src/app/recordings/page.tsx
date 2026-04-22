@@ -98,7 +98,7 @@ export default function RecordingsPage() {
     });
 
     return (
-        <ProtectedRoute allowedRoles={['student', 'instructor', 'admin', 'parent']}>
+        <ProtectedRoute allowedRoles={['kid', 'teacher', 'admin', 'parent']}>
             <AppLayout>
                 <div className="p-8 max-w-7xl mx-auto">
                     {/* Header */}
@@ -154,7 +154,7 @@ export default function RecordingsPage() {
                             </button>
                         )}
 
-                        {user?.role === 'instructor' && (
+                        {user?.role === 'teacher' && (
                             <div className="mt-8 pt-8 border-t border-gray-100">
                                 <p className="text-gray-500 mb-3 font-medium">Are you an instructor looking for your session recordings?</p>
                                 <div className="flex flex-col items-center gap-2">

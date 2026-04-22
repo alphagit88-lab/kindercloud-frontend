@@ -184,7 +184,7 @@ export default function DashboardPage() {
         {/* ── Activity Grids ──────────────────────── */}
 
         {/* STUDENT DASHBOARD */}
-        {user?.role === 'student' && (
+        {user?.role === 'kid' && (
           <div className="space-y-16 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               <StatCard icon={icons.book} label="Learning" value="4 Courses" sub="Active enrollments" accent="bg-white text-blue-600" />
@@ -207,7 +207,7 @@ export default function DashboardPage() {
         )}
 
         {/* INSTRUCTOR DASHBOARD */}
-        {user?.role === 'instructor' && (
+        {user?.role === 'teacher' && (
           <div className="space-y-16 animate-in fade-in duration-500">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               <StatCard icon={icons.users} label="Reach" value="142 Students" sub="Active learners" accent="bg-white text-blue-600" />

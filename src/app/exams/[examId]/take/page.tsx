@@ -182,7 +182,7 @@ export default function TakeExamPage() {
 
     if (loading) {
         return (
-            <ProtectedRoute allowedRoles={['student']}>
+            <ProtectedRoute allowedRoles={['kid']}>
                 <AppLayout>
                     <div className="flex h-[60vh] justify-center items-center text-blue-600">Loading Exam...</div>
                 </AppLayout>
@@ -198,7 +198,7 @@ export default function TakeExamPage() {
         const reachedMax = remainingAttempts <= 0;
 
         return (
-            <ProtectedRoute allowedRoles={['student']}>
+            <ProtectedRoute allowedRoles={['kid']}>
                 <AppLayout>
                     <div className="p-8 max-w-4xl mx-auto">
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center">

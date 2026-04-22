@@ -24,7 +24,7 @@ export const JoinButton: React.FC<JoinButtonProps> = ({ session, onStatusChange 
         return () => clearInterval(timer);
     }, [session.startTime]);
 
-    const isTeacher = user?.role === 'instructor';
+    const isTeacher = user?.role === 'teacher';
     const isStarted = session.status === 'in_progress';
     const isCompleted = session.status === 'completed';
     const isCancelled = session.status === 'cancelled';

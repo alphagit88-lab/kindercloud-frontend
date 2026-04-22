@@ -1,21 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useAuth } from '@/contexts/AuthContext';
-import AppLayout from '@/components/layout/AppLayout';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import {
-  TeacherProfile,
-  getTeacherProfile,
-  getSimilarTeachers,
-  getTeacherDisplayName,
-  parseSubjects,
-  parseLanguages,
-  formatRating,
-} from '@/lib/api/teachers';
+import { teachersAPI, type Teacher } from '@/lib/api/teachers';
+import { getTeacherProfile, getSimilarTeachers, getTeacherDisplayName, parseSubjects, parseLanguages, formatRating, getTeacherInitials } from '@/lib/api/teachers';
 import { AvailabilitySlot, formatTimeRange, formatDate, calculateDuration } from '@/lib/api/availability';
 import { Booking, CreatePackageBookingResponse } from '@/lib/api/bookings';
 import AvailabilityCalendar from '@/components/booking/AvailabilityCalendar';
@@ -23,6 +9,13 @@ import BookingConfirmDialog from '@/components/booking/BookingConfirmDialog';
 import BookingSuccess from '@/components/booking/BookingSuccess';
 import PackageBookingModal from '@/components/booking/PackageBookingModal';
 import { useCart } from '@/contexts/CartContext';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import AppLayout from '@/components/layout/AppLayout';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export default function TeacherProfilePage() {
   const params = useParams();
@@ -30,7 +23,7 @@ export default function TeacherProfilePage() {
   const { user } = useAuth();
   const teacherId = params.teacherId as string;
 
-  const [profile, setProfile] = useState<TeacherProfile | null>(null);
+  const [profile, setProfile] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -52,9 +45,14 @@ export default function TeacherProfilePage() {
   const [calendarKey, setCalendarKey] = useState(0);
 
   // Similar teachers
-  const [similarTeachers, setSimilarTeachers] = useState<TeacherProfile[]>([]);
+  const [similarTeachers, setSimilarTeachers] = useState<Teacher[]>([]);
 
-  const name = profile ? getTeacherDisplayName(profile) : 'Teacher';
+  const teacherName = profile ? getTeacherDisplayName(profile) : 'Teacher';
+  const subjects = profile ? parseSubjects(profile) : [];
+  const languages = profile ? parseLanguages(profile) : [];
+  const ratingDisplay = profile ? formatRating(profile) : '5.0';
+  const initials = getTeacherInitials(profile);
+  const profilePic = profile?.user?.profilePicture || profile?.teacher?.profilePicture;
 
   useEffect(() => {
     async function loadProfile() {
@@ -77,11 +75,11 @@ export default function TeacherProfilePage() {
   // Handle slot click based on booking mode
   const handleSlotSelect = useCallback((slot: AvailabilitySlot) => {
     if (bookingMode === 'package') {
-      addToCart(slot, name);
+      addToCart(slot, teacherName);
     } else {
       setSelectedSlot(slot);
     }
-  }, [bookingMode, addToCart, name]);
+  }, [bookingMode, addToCart, teacherName]);
 
   // Single booking handlers
   const handleBookSlot = useCallback(() => {
@@ -89,7 +87,7 @@ export default function TeacherProfilePage() {
       router.push(`/login?redirect=/teachers/${teacherId}`);
       return;
     }
-    if (user.role !== 'student') return;
+    if (user.role !== 'kid') return;
     setShowConfirmDialog(true);
   }, [user, router, teacherId]);
 
@@ -125,7 +123,7 @@ export default function TeacherProfilePage() {
       router.push(`/login?redirect=/teachers/${teacherId}`);
       return;
     }
-    if (user.role !== 'student') return;
+    if (user.role !== 'kid') return;
     setShowPackageModal(true);
   }, [user, router, teacherId]);
 
@@ -210,13 +208,7 @@ export default function TeacherProfilePage() {
     );
   }
 
-  // const name = getTeacherDisplayName(profile);
-  const subjects = parseSubjects(profile.subjects);
-  const languages = parseLanguages(profile.teachingLanguages);
-  const ratingDisplay = formatRating(profile.rating ? Number(profile.rating) : undefined);
-  const initials = `${profile.teacher.firstName[0]}${profile.teacher.lastName[0]}`.toUpperCase();
-
-  const isStudent = user?.role === 'student';
+  const isStudent = user?.role === 'kid';
   const isLoggedIn = !!user;
 
   return (
@@ -227,10 +219,10 @@ export default function TeacherProfilePage() {
           <div className="flex flex-col sm:flex-row sm:items-start gap-5">
             {/* Avatar */}
             <div className="w-20 h-20 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white font-bold text-xl flex items-center justify-center shrink-0">
-              {profile.teacher.profilePicture ? (
+              {profilePic ? (
                 <Image
-                  src={profile.teacher.profilePicture}
-                  alt={name}
+                  src={profilePic}
+                  alt={ teacherName }
                   width={80}
                   height={80}
                   className="w-20 h-20 rounded-full object-cover"
@@ -243,7 +235,7 @@ export default function TeacherProfilePage() {
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{ teacherName }</h1>
                 {profile.verified && (
                   <svg className="w-5 h-5 text-blue-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -261,7 +253,7 @@ export default function TeacherProfilePage() {
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   <span className="font-medium">{ratingDisplay}</span>
-                  {profile.ratingCount > 0 && (
+                  {(profile.ratingCount ?? 0) > 0 && (
                     <span className="text-slate-400">({profile.ratingCount} reviews)</span>
                   )}
                 </div>
@@ -272,13 +264,13 @@ export default function TeacherProfilePage() {
                   </span>
                 )}
 
-                {profile.totalSessions > 0 && (
+                {(profile.totalSessions ?? 0) > 0 && (
                   <span className="text-slate-500">
                     {profile.totalSessions} sessions completed
                   </span>
                 )}
 
-                {profile.totalStudents > 0 && (
+                {(profile.totalStudents ?? 0) > 0 && (
                   <span className="text-slate-500">
                     {profile.totalStudents} student{profile.totalStudents !== 1 ? 's' : ''}
                   </span>
@@ -300,10 +292,10 @@ export default function TeacherProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left column */}
           <div className="lg:col-span-1 space-y-6">
-            {profile.teacher.bio && (
+            {profile.teacher?.bio && (
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-3">About</h3>
-                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{profile.teacher.bio}</p>
+                <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{profile.teacher?.bio}</p>
               </div>
             )}
 
@@ -311,7 +303,7 @@ export default function TeacherProfilePage() {
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-3">Subjects</h3>
                 <div className="flex flex-wrap gap-2">
-                  {subjects.map((subj) => (
+                  {subjects.map((subj: string) => (
                     <span key={subj} className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-800 rounded-lg text-sm font-medium">
                       {subj}
                     </span>
@@ -324,7 +316,7 @@ export default function TeacherProfilePage() {
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wide mb-3">Teaching Languages</h3>
                 <div className="flex flex-wrap gap-2">
-                  {languages.map((lang) => (
+                  {languages.map((lang: string) => (
                     <span key={lang} className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-800 rounded-lg text-sm font-medium">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
@@ -414,7 +406,7 @@ export default function TeacherProfilePage() {
                     <div className="text-sm text-gray-600 space-y-1.5">
                       <div className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v12a2 2 0 002 2z" />
                         </svg>
                         {formatDate(selectedSlot.startTime)}
                       </div>
@@ -569,7 +561,8 @@ export default function TeacherProfilePage() {
                 const tName = getTeacherDisplayName(t);
                 const tSubjects = parseSubjects(t.subjects).slice(0, 3);
                 const tRating = formatRating(t.rating ? Number(t.rating) : undefined);
-                const tInitials = `${t.teacher.firstName[0]}${t.teacher.lastName[0]}`.toUpperCase();
+                const tInitials = getTeacherInitials(t);
+                const tPic = t.user?.profilePicture || t.teacher?.profilePicture;
                 return (
                   <Link
                     key={t.id}
@@ -578,9 +571,9 @@ export default function TeacherProfilePage() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white font-bold text-sm flex items-center justify-center shrink-0">
-                        {t.teacher.profilePicture ? (
+                        {tPic ? (
                           <Image
-                            src={t.teacher.profilePicture}
+                            src={tPic}
                             alt={tName}
                             width={40}
                             height={40}
@@ -609,7 +602,7 @@ export default function TeacherProfilePage() {
                     </div>
                     {tSubjects.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {tSubjects.map((s) => (
+                        {tSubjects.map((s: string) => (
                           <span key={s} className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
                             {s}
                           </span>
@@ -633,7 +626,7 @@ export default function TeacherProfilePage() {
         <BookingConfirmDialog
           isOpen={showConfirmDialog}
           slot={selectedSlot}
-          teacherName={name}
+          teacherName={ teacherName }
           onClose={handleCloseConfirm}
           onSuccess={handleBookingSuccess}
         />
@@ -643,7 +636,7 @@ export default function TeacherProfilePage() {
         <BookingSuccess
           isOpen={showSuccess}
           booking={createdBooking}
-          teacherName={name}
+          teacherName={ teacherName }
           onClose={handleCloseSuccess}
           onViewBookings={handleViewBookings}
         />
@@ -654,7 +647,7 @@ export default function TeacherProfilePage() {
         <PackageBookingModal
           isOpen={showPackageModal}
           slots={cartItems}
-          teacherName={cartItems.length > 0 && Array.from(new Set(cartItems.map(i => i.teacherId))).length === 1 ? name : 'Multi-Instructor'}
+          teacherName={cartItems.length > 0 && Array.from(new Set(cartItems.map(i => i.teacherId))).length === 1 ? teacherName : 'Multi-Instructor'}
           packageDiscount3Plus={profile.packageDiscount3Plus}
           packageDiscount5Plus={profile.packageDiscount5Plus}
           onClose={() => setShowPackageModal(false)}

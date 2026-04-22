@@ -126,7 +126,7 @@ export default function StudentExamsPage() {
     };
 
     return (
-        <ProtectedRoute allowedRoles={['student']}>
+        <ProtectedRoute allowedRoles={['kid']}>
             <AppLayout>
                 <div className="p-6 max-w-6xl mx-auto">
                     {/* Header */}
