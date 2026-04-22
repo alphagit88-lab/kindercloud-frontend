@@ -1,7 +1,7 @@
 import { upload } from '@vercel/blob/client';
 
 // API Configuration
-const API_BASE_URL = typeof window !== "undefined" ? "/proxied-backend" : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000");
+const API_BASE_URL = typeof window !== "undefined" ? "/proxied-backend/api" : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api");
 
 // Types
 export interface Category {

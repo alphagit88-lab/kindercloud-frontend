@@ -27,7 +27,7 @@ import {
   RELATIONSHIPS,
 } from '@/lib/api/profile';
 
-const API_BASE_URL = typeof window !== "undefined" ? "/proxied-backend" : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000");
+const API_BASE_URL = typeof window !== "undefined" ? "/proxied-backend/api" : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api");
 
 export default function ProfilePage() {
   const { user, loading: authLoading, refreshUser } = useAuth();
