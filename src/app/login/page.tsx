@@ -4,27 +4,37 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { 
+  Cloud, 
+  Sparkles, 
+  ArrowRight, 
+  Lock, 
+  Mail, 
+  Smile, 
+  Loader2,
+  AlertCircle,
+  Fingerprint,
+  Database,
+  GraduationCap,
+  Heart
+} from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const { login, user, loading: authLoading } = useAuth();
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     if (!authLoading && user) {
-      if (user.role === 'admin') {
-        router.push('/admin');
-      } else if (user.role === 'instructor') {
-        router.push('/instructor/courses');
-      } else {
-        router.push('/dashboard');
-      }
+      const redirectMap: Record<string, string> = {
+        admin: '/admin',
+        teacher: '/teacher',
+        parent: '/parent',
+        kid: '/kid',
+      };
+      router.push(redirectMap[user.role] || '/dashboard');
     }
   }, [user, authLoading, router]);
 
@@ -34,254 +44,186 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const user = await login(formData.email, formData.password);
-      if (user.role === 'admin') {
-        router.push('/admin');
-      } else if (user.role === 'instructor') {
-        router.push('/instructor/courses');
-      } else {
-        router.push('/dashboard');
-      }
+      await login(formData.email, formData.password);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : 'Invalid credentials. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e] text-white relative overflow-hidden">
-      {/* Background effects (match homepage vibe) */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-225 h-150 bg-blue-600/20 rounded-full blur-[120px]" />
-        <div className="absolute top-1/3 left-1/4 w-105 h-105 bg-violet-600/15 rounded-full blur-[100px]" />
-        <div className="absolute top-1/4 right-1/4 w-90 h-90 bg-indigo-500/10 rounded-full blur-[80px]" />
-      </div>
+    <div className="min-h-screen kinder-bg flex items-center justify-center p-6 font-sans">
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_32px_120px_-20px_rgba(0,0,0,0.1)] border border-white/50 overflow-hidden">
+        
+        {/* Left Aspect: Visual Brand */}
+        <div className="hidden md:flex bg-slate-900 p-16 flex-col justify-between relative overflow-hidden">
+           <div className="absolute inset-0 bg-linear-to-br from-sky-600/10 to-transparent" />
+           <div className="absolute top-0 right-0 p-20 opacity-5 pointer-events-none">
+              <Smile className="w-96 h-96 text-white" />
+           </div>
 
-      {/* Subtle grid overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-
-      <div className="relative min-h-screen grid lg:grid-cols-2">
-        {/* Left Panel - Branding */}
-        <div className="hidden lg:flex items-center justify-center px-10 py-16">
-          <div className="max-w-xl w-full">
-            <Link href="/" className="inline-flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-shadow">
-                <span className="text-white font-bold text-sm">L</span>
-              </div>
-              <span className="text-lg font-bold text-white tracking-tight group-hover:text-white/90 transition-colors">
-                LMS
-              </span>
-            </Link>
-
-            {/* Badge */}
-            <div className="mt-8 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-300 text-xs font-semibold tracking-wide uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-              Built for Sri Lankan learners
-            </div>
-
-            <h1 className="mt-6 text-4xl xl:text-5xl font-extrabold tracking-tight leading-[1.1]">
-              Welcome back.
-              <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-violet-400 to-indigo-400">
-                Continue learning
-              </span>
-            </h1>
-            <p className="mt-4 text-slate-300 text-base leading-relaxed max-w-md">
-              Sign in to pick up where you left off with live sessions, courses, exams, and detailed analytics.
-            </p>
-
-            {/* Highlight card */}
-            <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 flex items-center gap-4 shadow-lg shadow-black/30">
-              <div className="w-10 h-10 rounded-2xl bg-linear-to-br from-emerald-400/80 to-blue-500/80 flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-white">
-                  One login for every role
-                </p>
-                <p className="text-xs text-slate-400">
-                  Seamlessly switch between student, instructor, parent, and admin experiences.
-                </p>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="mt-8 grid grid-cols-3 gap-5">
-              {[
-                { value: "100+", label: "Teachers" },
-                { value: "500+", label: "Students" },
-                { value: "50+", label: "Courses" },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="relative rounded-2xl border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-md overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent opacity-60" />
-                  <div className="relative">
-                    <div className="text-sm text-slate-400 mb-1">{stat.label}</div>
-                    <div className="text-2xl font-semibold text-white">{stat.value}</div>
-                  </div>
+           <div className="relative z-10">
+              <Link href="/" className="flex items-center gap-3 mb-12 group">
+                <div className="w-10 h-10 bg-sky-500 rounded-xl flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform">
+                  <Cloud className="w-6 h-6 fill-white text-white" />
                 </div>
-              ))}
-            </div>
-          </div>
+                <span className="text-xl font-display font-black tracking-tighter text-white">KinderCloud</span>
+              </Link>
+              
+              <h2 className="text-4xl font-display font-black text-white leading-tight mb-6">
+                Connect to your <span className="text-sky-400">magic circle.</span>
+              </h2>
+              <p className="text-slate-400 font-bold leading-relaxed mb-10 max-w-xs">
+                Access your personalized portal and continue the educational adventure.
+              </p>
+           </div>
+
+           <div className="relative z-10 flex items-center gap-4 p-6 bg-white/5 rounded-2xl border border-white/10">
+              <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center shrink-0">
+                 <Fingerprint className="w-6 h-6 text-sky-400" />
+              </div>
+              <p className="text-xs font-bold text-slate-300">
+                 Secure multi-tenant session management active.
+              </p>
+           </div>
         </div>
 
-        {/* Right Panel - Form */}
-        <div className="flex items-center justify-center px-6 py-14">
-          <div className="w-full max-w-md">
-            {/* Mobile logo */}
-            <div className="lg:hidden flex justify-center mb-8">
-              <Link href="/" className="inline-flex items-center gap-3">
-                <div className="w-11 h-11 bg-linear-to-br from-blue-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                  <span className="text-white font-bold text-sm">L</span>
-                </div>
-                <span className="text-lg font-bold tracking-tight">LMS</span>
-              </Link>
-            </div>
+        {/* Right Aspect: Professional Login */}
+        <div className="p-12 md:p-16 flex flex-col justify-center">
+           <div className="max-w-sm mx-auto w-full space-y-10">
+             <div>
+                <h1 className="text-3xl font-display font-black text-slate-900 mb-2 italic">Welcome Back</h1>
+                <p className="text-slate-500 font-bold">Please sign in to your professional portal.</p>
+             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl shadow-black/40 overflow-hidden">
-              <div className="px-6 sm:px-8 pt-8 pb-6 border-b border-white/10">
-                <h2 className="text-2xl font-bold tracking-tight text-white">Sign in</h2>
-                <p className="text-slate-400 mt-1 text-sm">
-                  Enter your credentials to access your dashboard.
-                </p>
-              </div>
+             {error && (
+               <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center gap-3">
+                 <AlertCircle className="w-5 h-5 text-rose-500" />
+                 <p className="text-xs font-black text-rose-600 uppercase tracking-widest">{error}</p>
+               </div>
+             )}
 
-              <div className="px-6 sm:px-8 py-6 space-y-6">
-                {error && (
-                  <div className="flex items-start gap-3 p-4 rounded-2xl bg-red-500/10 border border-red-500/25">
-                    <svg className="w-5 h-5 text-red-300 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-sm text-red-200 leading-relaxed">{error}</p>
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-slate-200 mb-2">
-                      Email
-                    </label>
+             <form onSubmit={handleSubmit} className="space-y-6">
+               <div className="space-y-2">
+                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
+                 <div className="relative group">
+                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-sky-500 transition-colors" />
                     <input
-                      id="email"
                       name="email"
                       type="email"
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-2xl border border-white/10 bg-white/5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/40 transition"
-                      placeholder="you@example.com"
-                      autoComplete="email"
+                      placeholder="teacher@kindercloud.com"
+                      className="w-full pl-14 pr-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-sky-500/5 focus:border-sky-500 transition-all font-bold text-slate-800 outline-none text-sm"
                     />
-                  </div>
+                 </div>
+               </div>
 
-                  <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-slate-200 mb-2">
-                      Password
-                    </label>
+               <div className="space-y-2">
+                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Secure Password</label>
+                 <div className="relative group">
+                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-sky-500 transition-colors" />
                     <input
-                      id="password"
                       name="password"
                       type="password"
                       required
                       value={formData.password}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-2xl border border-white/10 bg-white/5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/40 transition"
-                      placeholder="Enter your password"
-                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      className="w-full pl-14 pr-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-sky-500/5 focus:border-sky-500 transition-all font-bold text-slate-800 outline-none text-sm"
                     />
-                  </div>
+                 </div>
+               </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs text-slate-500">
-                      New here?{" "}
-                      <Link
-                        href="/register"
-                        className="text-slate-200 hover:text-white font-semibold transition-colors"
-                      >
-                        Create an account
-                      </Link>
-                    </div>
-                    <Link
-                      href="/forgot-password"
-                      className="text-xs text-slate-300 hover:text-white font-semibold transition-colors"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
+               <div className="flex justify-end">
+                 <Link href="/forgot-password" className="text-[10px] font-black uppercase tracking-widest text-sky-600 hover:underline">
+                   Forgot Magic Word?
+                 </Link>
+               </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3.5 rounded-2xl font-semibold text-sm bg-linear-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 transition-all shadow-xl shadow-blue-700/25 hover:shadow-blue-600/35 disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        Signing in...
-                      </span>
-                    ) : (
-                      'Sign In'
-                    )}
-                  </button>
-                </form>
+               <button
+                 type="submit"
+                 disabled={loading}
+                 className="w-full py-5 rounded-2xl font-black text-sm uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800 shadow-xl shadow-slate-900/10 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 group disabled:opacity-50"
+               >
+                 {loading ? (
+                   <Loader2 className="w-6 h-6 animate-spin text-sky-400" />
+                 ) : (
+                   <>
+                     <span>Sign In Portal</span>
+                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                   </>
+                 )}
+               </button>
+             </form>
 
-                {/* Demo Credentials */}
-                <div className="rounded-2xl border border-white/10 bg-white/5">
-                  <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-xs font-semibold text-slate-200 tracking-wide uppercase">Demo credentials</p>
-                  </div>
-                  <div className="px-4 py-3 grid grid-cols-1 gap-2 text-xs text-slate-400">
-                    <div className="flex justify-between gap-4">
-                      <span className="font-semibold text-slate-200">Admin</span>
-                      <span className="text-right">admin@lms.com / Test@1234</span>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <span className="font-semibold text-slate-200">Instructor</span>
-                      <span className="text-right">john.doe@lms.com / Test@1234</span>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <span className="font-semibold text-slate-200">Student</span>
-                      <span className="text-right">jane.smith@lms.com / Test@1234</span>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <span className="font-semibold text-slate-200">Parent</span>
-                      <span className="text-right">kamala.perera@lms.com / Test@1234</span>
-                    </div>
-                  </div>
+             <div className="text-center pt-8 border-t border-slate-50 mt-8">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">
+                  Experience the Portals
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                   <button 
+                    type="button"
+                    onClick={() => setFormData({ email: 'admin@kindercloud.com', password: 'Kinder@123!' })}
+                    className="group p-4 bg-white border border-slate-100 rounded-2xl hover:border-sky-500 hover:shadow-lg hover:shadow-sky-500/5 transition-all text-left"
+                   >
+                     <div className="w-8 h-8 bg-sky-50 text-sky-500 rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <Database className="w-4 h-4" />
+                     </div>
+                     <p className="text-[10px] font-black uppercase tracking-tight text-slate-800">Admin</p>
+                   </button>
+
+                   <button 
+                    type="button"
+                    onClick={() => setFormData({ email: 'teacher@kindercloud.com', password: 'Kinder@123!' })}
+                    className="group p-4 bg-white border border-slate-100 rounded-2xl hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/5 transition-all text-left"
+                   >
+                     <div className="w-8 h-8 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <GraduationCap className="w-4 h-4" />
+                     </div>
+                     <p className="text-[10px] font-black uppercase tracking-tight text-slate-800">Teacher</p>
+                   </button>
+
+                   <button 
+                    type="button"
+                    onClick={() => setFormData({ email: 'parent@kindercloud.com', password: 'Kinder@123!' })}
+                    className="group p-4 bg-white border border-slate-100 rounded-2xl hover:border-rose-500 hover:shadow-lg hover:shadow-rose-500/5 transition-all text-left"
+                   >
+                     <div className="w-8 h-8 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <Heart className="w-4 h-4" />
+                     </div>
+                     <p className="text-[10px] font-black uppercase tracking-tight text-slate-800">Parent</p>
+                   </button>
+
+                   <button 
+                    type="button"
+                    onClick={() => setFormData({ email: 'kid@kindercloud.com', password: 'Kinder@123!' })}
+                    className="group p-4 bg-white border border-slate-100 rounded-2xl hover:border-mint-500 hover:shadow-lg hover:shadow-mint-500/5 transition-all text-left"
+                   >
+                     <div className="w-8 h-8 bg-mint-50 text-mint-500 rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                        <Smile className="w-4 h-4" />
+                     </div>
+                     <p className="text-[10px] font-black uppercase tracking-tight text-slate-800">Kid</p>
+                   </button>
                 </div>
-              </div>
-            </div>
+                <div className="mt-4">
+                  <p className="text-[10px] font-bold text-slate-400 italic">Pass: Kinder@123!</p>
+                </div>
+             </div>
 
-            <p className="text-center mt-8 text-xs text-slate-600">
-              &copy; 2026 LMS. All rights reserved.
-            </p>
-          </div>
+             <p className="text-center text-xs font-bold text-slate-400 pt-10">
+               New to the system?{' '}
+               <Link href="/register" className="text-sky-600 font-black hover:underline uppercase tracking-widest">
+                 Create Account
+               </Link>
+             </p>
+           </div>
         </div>
       </div>
     </div>
