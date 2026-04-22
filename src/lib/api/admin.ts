@@ -1,7 +1,18 @@
-const API_BASE_URL = typeof window !== "undefined" ? "/proxied-backend" : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000");
+const API_BASE_URL = (typeof window !== "undefined" 
+  ? "/proxied-backend" 
+  : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000")).replace(/\/api\/?$/, "");
 
 async function apiFetch(endpoint: string, options?: RequestInit) {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    // Ensure endpoint starts with /
+    const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    
+    // Construct URL and ensure no double /api/api
+    let fullUrl = `${API_BASE_URL}${path}`;
+    if (fullUrl.includes('/api/api/')) {
+      fullUrl = fullUrl.replace('/api/api/', '/api/');
+    }
+
+    const response = await fetch(fullUrl, {
         ...options,
         credentials: 'include',
         headers: {
