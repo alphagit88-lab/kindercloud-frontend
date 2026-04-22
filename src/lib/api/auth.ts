@@ -1,5 +1,6 @@
-// API Configuration
-const API_BASE_URL = typeof window !== "undefined" ? "/proxied-backend" : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000");
+const API_BASE_URL = (typeof window !== "undefined" 
+  ? "/proxied-backend" 
+  : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000")).replace(/\/api\/?$/, "");
 import { uploadToBlob } from './courses';
 
 export interface User {
@@ -33,6 +34,7 @@ export interface LoginData {
 export interface AuthResponse {
   message: string;
   user: User;
+  token?: string;
 }
 
 export interface AuthStatus {
@@ -44,7 +46,16 @@ export interface AuthStatus {
 
 class AuthAPI {
   private async fetch(endpoint: string, options?: RequestInit) {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    // Ensure endpoint starts with /
+    const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    
+    // Construct URL and ensure no double /api/api
+    let fullUrl = `${API_BASE_URL}${path}`;
+    if (fullUrl.includes('/api/api/')) {
+      fullUrl = fullUrl.replace('/api/api/', '/api/');
+    }
+
+    const response = await fetch(fullUrl, {
       ...options,
       cache: 'no-store',
       credentials: 'include', // Important: send cookies with requests
