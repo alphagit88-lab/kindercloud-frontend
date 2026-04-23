@@ -17,7 +17,8 @@ import {
   AlertCircle,
   Coffee,
   XCircle,
-  Loader2
+  Loader2,
+  LogOut
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
