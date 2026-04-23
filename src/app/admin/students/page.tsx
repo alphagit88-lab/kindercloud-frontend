@@ -100,7 +100,13 @@ export default function StudentManagementPage() {
       address: student.address || '',
       emergencyContact: student.emergencyContact || '',
       medicalNotes: student.medicalNotes || '',
-      guardianInfo: initialFormState.guardianInfo // Guardians are usually managed separately or requires more logic
+      guardianInfo: student.user.guardianLinksAsKid?.[0]?.parent ? {
+        firstName: student.user.guardianLinksAsKid[0].parent.firstName,
+        lastName: student.user.guardianLinksAsKid[0].parent.lastName,
+        email: student.user.guardianLinksAsKid[0].parent.email,
+        phone: student.user.guardianLinksAsKid[0].parent.phone || '',
+        relationship: 'Parent'
+      } : initialFormState.guardianInfo
     });
     setIsModalOpen(true);
   };
@@ -235,7 +241,12 @@ export default function StudentManagementPage() {
                       </div>
                       <div>
                         <p className="text-base font-black text-slate-800 leading-none mb-1">{s.user.firstName} {s.user.lastName}</p>
-                        <p className="text-xs font-bold text-slate-400">{s.user.email}</p>
+                        <p className="text-[10px] font-bold text-slate-400">{s.user.email}</p>
+                        {s.user.guardianLinksAsKid?.[0] && (
+                          <p className="text-[9px] font-black text-sky-500 uppercase tracking-tighter mt-1 flex items-center gap-1">
+                            <Heart className="w-2 h-2 fill-current" /> {s.user.guardianLinksAsKid[0].parent.email}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </td>

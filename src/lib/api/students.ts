@@ -9,6 +9,17 @@ export interface Student {
     firstName: string;
     lastName: string;
     profilePicture?: string;
+    guardianLinksAsKid?: Array<{
+      id: string;
+      parentId: string;
+      parent: {
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        phone?: string;
+      };
+    }>;
   };
   gender?: string;
   dateOfBirth?: string;
