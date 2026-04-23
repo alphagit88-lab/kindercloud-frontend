@@ -11,6 +11,8 @@ export interface Lesson {
   progress?: string;
   homework?: string;
   assessment?: string;
+  attachmentUrl?: string;
+  attachmentType?: string;
   teacher?: {
     firstName: string;
     lastName: string;
@@ -29,11 +31,24 @@ export interface CreateLessonData {
   progress?: string;
   homework?: string;
   assessment?: string;
+  attachmentType?: string;
+  file?: File;
 }
 
 export const lessonsAPI = {
   logLesson: async (data: CreateLessonData): Promise<Lesson> => {
-    const response = await api.post<{ lesson: Lesson }>('/api/lessons', data);
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && key !== 'file') {
+        formData.append(key, value as string);
+      }
+    });
+    
+    if (data.file) {
+      formData.append('file', data.file);
+    }
+
+    const response = await api.post<{ lesson: Lesson }>('/api/lessons', formData);
     return response.data.lesson;
   },
 

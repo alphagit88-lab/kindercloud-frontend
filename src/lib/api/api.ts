@@ -34,7 +34,6 @@ async function apiFetch<T = any>(endpoint: string, options?: ApiOptions): Promis
     ...options,
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...options?.headers,
     },
@@ -57,12 +56,33 @@ async function apiFetch<T = any>(endpoint: string, options?: ApiOptions): Promis
 
 const api = {
   get: <T = any>(endpoint: string, options?: ApiOptions) => apiFetch<T>(endpoint, { ...options, method: 'GET' }),
-  post: <T = any>(endpoint: string, data: any, options?: ApiOptions) =>
-    apiFetch<T>(endpoint, { ...options, method: 'POST', body: JSON.stringify(data) }),
-  put: <T = any>(endpoint: string, data: any, options?: ApiOptions) =>
-    apiFetch<T>(endpoint, { ...options, method: 'PUT', body: JSON.stringify(data) }),
-  patch: <T = any>(endpoint: string, data: any, options?: ApiOptions) =>
-    apiFetch<T>(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(data) }),
+  post: <T = any>(endpoint: string, data: any, options?: ApiOptions) => {
+    const isFormData = data instanceof FormData;
+    return apiFetch<T>(endpoint, { 
+      ...options, 
+      method: 'POST', 
+      body: isFormData ? data : JSON.stringify(data),
+      headers: isFormData ? { ...options?.headers } : { 'Content-Type': 'application/json', ...options?.headers }
+    });
+  },
+  put: <T = any>(endpoint: string, data: any, options?: ApiOptions) => {
+    const isFormData = data instanceof FormData;
+    return apiFetch<T>(endpoint, { 
+      ...options, 
+      method: 'PUT', 
+      body: isFormData ? data : JSON.stringify(data),
+      headers: isFormData ? { ...options?.headers } : { 'Content-Type': 'application/json', ...options?.headers }
+    });
+  },
+  patch: <T = any>(endpoint: string, data: any, options?: ApiOptions) => {
+    const isFormData = data instanceof FormData;
+    return apiFetch<T>(endpoint, { 
+      ...options, 
+      method: 'PATCH', 
+      body: isFormData ? data : JSON.stringify(data),
+      headers: isFormData ? { ...options?.headers } : { 'Content-Type': 'application/json', ...options?.headers }
+    });
+  },
   delete: <T = any>(endpoint: string, options?: ApiOptions) => apiFetch<T>(endpoint, { ...options, method: 'DELETE' }),
 };
 

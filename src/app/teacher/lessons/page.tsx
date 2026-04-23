@@ -37,7 +37,9 @@ export default function TeacherLessonsPage() {
     activity: '',
     progress: '',
     homework: '',
-    assessment: ''
+    assessment: '',
+    attachmentType: 'document',
+    file: undefined
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -102,7 +104,9 @@ export default function TeacherLessonsPage() {
         activity: '',
         progress: '',
         homework: '',
-        assessment: ''
+        assessment: '',
+        attachmentType: 'document',
+        file: undefined
       });
     } catch (err) {
       console.error(err);
@@ -207,6 +211,17 @@ export default function TeacherLessonsPage() {
                     <div className="flex flex-wrap gap-3">
                        {lesson.homework && <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-black rounded-full uppercase tracking-tighter">Homework Assigned</span>}
                        {lesson.assessment && <span className="px-3 py-1 bg-sky-100 text-sky-700 text-xs font-black rounded-full uppercase tracking-tighter">Self-Assessment Ready</span>}
+                       {lesson.attachmentUrl && (
+                         <a 
+                           href={lesson.attachmentUrl} 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           className="px-3 py-1 bg-rose-500 text-white text-[10px] font-black rounded-full uppercase tracking-widest flex items-center gap-1 hover:bg-rose-600 transition-colors"
+                         >
+                           <Upload className="w-3 h-3" />
+                           View {lesson.attachmentType || 'Attachment'}
+                         </a>
+                       )}
                     </div>
                   </div>
                 ))}
@@ -338,31 +353,33 @@ export default function TeacherLessonsPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-neutral-400 ml-1 flex items-center gap-2">
-                      <Home className="w-3.5 h-3.5" />
-                      Homework
-                    </label>
+                <div className="space-y-4 p-6 bg-rose-50/50 dark:bg-neutral-950 border border-rose-100 dark:border-neutral-800 rounded-[2rem]">
+                  <label className="text-xs font-black uppercase tracking-widest text-rose-500 flex items-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    Lesson Attachments (Max 500MB)
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <select 
+                      value={formData.attachmentType}
+                      onChange={(e) => setFormData({...formData, attachmentType: e.target.value})}
+                      className="px-5 py-4 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 font-bold text-sm outline-none"
+                    >
+                      <option value="document">Document / PDF</option>
+                      <option value="image">Image / Photo</option>
+                      <option value="video">Video Lesson</option>
+                    </select>
                     <input 
-                      value={formData.homework}
-                      onChange={(e) => setFormData({...formData, homework: e.target.value})}
-                      placeholder="Tasks for home..."
-                      className="w-full px-5 py-4 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all font-bold"
+                      type="file"
+                      onChange={(e) => setFormData({...formData, file: e.target.files?.[0]})}
+                      className="px-5 py-3 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 font-bold text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-rose-500 file:text-white hover:file:bg-rose-600"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-neutral-400 ml-1 flex items-center gap-2">
-                      <Star className="w-3.5 h-3.5" />
-                      Assessment
-                    </label>
-                    <input 
-                      value={formData.assessment}
-                      onChange={(e) => setFormData({...formData, assessment: e.target.value})}
-                      placeholder="Classroom outcome..."
-                      className="w-full px-5 py-4 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all font-bold"
-                    />
-                  </div>
+                  {formData.file && (
+                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2 px-2">
+                       <CheckCircle2 className="w-3 h-3" />
+                       File ready: {formData.file.name} ({(formData.file.size / (1024 * 1024)).toFixed(1)} MB)
+                    </p>
+                  )}
                 </div>
 
                 <button 
