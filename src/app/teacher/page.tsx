@@ -156,72 +156,133 @@ export default function TeacherDashboardPage() {
         {/* Main Content Area */}
         <div className="lg:col-span-2 space-y-8">
            {/* Attendance Card */}
-           <section className="bg-white dark:bg-neutral-800 p-8 rounded-[3rem] border border-sky-100 dark:border-neutral-700 shadow-xl shadow-sky-500/5 relative overflow-hidden">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-                 <div>
-                    <h2 className="text-2xl font-black text-neutral-800 dark:text-white flex items-center gap-3 mb-2">
-                       <CheckCircle2 className="w-7 h-7 text-emerald-500" />
-                       Attendance & Check-in
-                    </h2>
-                    <div className="flex items-center gap-4">
-                        <p className="text-sm font-bold text-neutral-400">
-                        {attendance 
-                            ? `Status: ${attendance.status.toUpperCase()} ${attendance.checkInTime ? `at ${format(new Date(attendance.checkInTime), 'hh:mm a')}` : ''}`
-                            : 'You haven\'t checked in yet for today.'}
-                        </p>
-                        {attendance?.checkInTime && !attendance.checkOutTime && (
-                            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100">
-                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest font-mono">{workHours}</span>
-                            </div>
-                        )}
-                    </div>
-                 </div>
+            {/* Attendance Card - Professional Redesign */}
+            <section className="bg-white dark:bg-neutral-800 rounded-[3.5rem] border border-neutral-100 dark:border-neutral-700 shadow-2xl shadow-neutral-200/50 dark:shadow-none overflow-hidden transition-all duration-500 hover:shadow-sky-500/10">
+               <div className="flex flex-col lg:flex-row">
+                  {/* Left Side: Status & Timer */}
+                  <div className={`flex-1 p-10 flex flex-col justify-center transition-colors duration-500 ${
+                     attendance?.checkInTime && !attendance.checkOutTime 
+                     ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white' 
+                     : 'bg-neutral-50 dark:bg-neutral-900'
+                  }`}>
+                     <div className="flex items-center gap-3 mb-6">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-all ${
+                           attendance?.checkInTime && !attendance.checkOutTime 
+                           ? 'bg-white/20 backdrop-blur-md text-white rotate-12' 
+                           : 'bg-sky-500 text-white'
+                        }`}>
+                           <Clock className="w-6 h-6" />
+                        </div>
+                        <div>
+                           <h3 className={`text-xs font-black uppercase tracking-[0.2em] ${
+                              attendance?.checkInTime && !attendance.checkOutTime ? 'text-white/70' : 'text-neutral-400'
+                           }`}>
+                              {attendance?.checkInTime && !attendance.checkOutTime ? 'Current Session' : 'Shift Status'}
+                           </h3>
+                           <p className={`text-xl font-black ${
+                              attendance?.checkInTime && !attendance.checkOutTime ? 'text-white' : 'text-neutral-800 dark:text-white'
+                           }`}>
+                              {attendance 
+                                 ? attendance.status.toUpperCase() 
+                                 : 'Not Checked In'}
+                           </p>
+                        </div>
+                     </div>
 
-                 <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-                    {!attendance || (attendance.status !== 'present' && attendance.status !== 'late') ? (
-                       <>
-                          <button 
-                            onClick={() => handleMark('present')}
-                            disabled={submitLoading}
-                            className="flex-1 sm:flex-none px-6 py-3 bg-emerald-500 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
-                          >
-                             {submitLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
-                             Check In
-                          </button>
-                          <button 
-                            onClick={() => { setModalType('late'); setIsModalOpen(true); }}
-                            className="flex-1 sm:flex-none px-6 py-3 bg-amber-100 text-amber-700 font-black rounded-2xl hover:bg-amber-200 transition-all active:scale-95 flex items-center justify-center gap-2"
-                          >
-                             <Clock className="w-5 h-5" />
-                             I'm Late
-                          </button>
-                       </>
-                    ) : (
-                       <button 
-                        onClick={handleCheckOut}
-                        disabled={!!attendance.checkOutTime || submitLoading}
-                        className={`flex-1 sm:flex-none px-6 py-3 font-black rounded-2xl transition-all flex items-center justify-center gap-2 ${
-                            attendance.checkOutTime 
-                            ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed' 
-                            : 'bg-rose-100 text-rose-700 hover:bg-rose-200 active:scale-95'
-                        }`}
-                       >
-                          <LogOut className="w-5 h-5" />
-                          {attendance.checkOutTime ? `Checked Out at ${format(new Date(attendance.checkOutTime), 'hh:mm a')}` : 'Check Out'}
-                       </button>
-                    )}
-                    
-                    <button 
-                        onClick={() => { setModalType('leave'); setIsModalOpen(true); }}
-                        className="flex-1 sm:flex-none px-6 py-3 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2"
-                    >
-                        <Coffee className="w-5 h-5" />
-                        Request Leave
-                    </button>
-                 </div>
-              </div>
-           </section>
+                     {attendance?.checkInTime && !attendance.checkOutTime ? (
+                        <div className="space-y-4">
+                           <div className="text-6xl font-black tracking-tighter font-mono flex items-baseline gap-2">
+                              {workHours}
+                              <span className="text-xl opacity-50 font-sans tracking-normal">hrs</span>
+                           </div>
+                           <div className="space-y-2">
+                              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest opacity-70">
+                                 <span>Shift Progress</span>
+                                 <span>8h Target</span>
+                              </div>
+                              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                                 <div 
+                                    className="h-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all duration-1000" 
+                                    style={{ width: `${Math.min((parseInt(workHours.split(':')[0]) / 8) * 100, 100)}%` }}
+                                 />
+                              </div>
+                           </div>
+                        </div>
+                     ) : (
+                        <div className="py-4">
+                           <p className="text-neutral-400 font-bold italic">
+                              Ready to start your magical day with the little ones?
+                           </p>
+                        </div>
+                     )}
+                  </div>
+
+                  {/* Right Side: Actions */}
+                  <div className="p-10 flex flex-col justify-center bg-white dark:bg-neutral-800 border-l border-neutral-100 dark:border-neutral-700 min-w-[320px]">
+                     <div className="grid grid-cols-1 gap-4">
+                        {!attendance || (attendance.status !== 'present' && attendance.status !== 'late') ? (
+                           <>
+                              <button 
+                                 onClick={() => handleMark('present')}
+                                 disabled={submitLoading}
+                                 className="group relative overflow-hidden px-8 py-5 bg-emerald-500 text-white font-black rounded-3xl hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-3"
+                              >
+                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                 {submitLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-6 h-6" />}
+                                 <span className="text-lg">Check In Now</span>
+                              </button>
+                              <div className="grid grid-cols-2 gap-4">
+                                 <button 
+                                    onClick={() => { setModalType('late'); setIsModalOpen(true); }}
+                                    className="px-6 py-4 bg-amber-50 text-amber-600 font-black rounded-2xl hover:bg-amber-100 transition-all active:scale-95 flex flex-col items-center gap-1 border border-amber-100"
+                                 >
+                                    <Clock className="w-5 h-5" />
+                                    <span className="text-[10px] uppercase tracking-widest">I'm Late</span>
+                                 </button>
+                                 <button 
+                                    onClick={() => { setModalType('leave'); setIsModalOpen(true); }}
+                                    className="px-6 py-4 bg-rose-50 text-rose-600 font-black rounded-2xl hover:bg-rose-100 transition-all active:scale-95 flex flex-col items-center gap-1 border border-rose-100"
+                                 >
+                                    <Coffee className="w-5 h-5" />
+                                    <span className="text-[10px] uppercase tracking-widest">Leave</span>
+                                 </button>
+                              </div>
+                           </>
+                        ) : (
+                           <div className="space-y-4">
+                              <div className="p-6 rounded-3xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-700 mb-2">
+                                 <div className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-2">Checked in at</div>
+                                 <div className="text-2xl font-black text-neutral-800 dark:text-white">
+                                    {attendance.checkInTime ? format(new Date(attendance.checkInTime), 'hh:mm a') : '--:--'}
+                                 </div>
+                              </div>
+                              
+                              <button 
+                                 onClick={handleCheckOut}
+                                 disabled={!!attendance.checkOutTime || submitLoading}
+                                 className={`w-full py-5 font-black rounded-3xl transition-all flex items-center justify-center gap-3 text-lg shadow-xl ${
+                                    attendance.checkOutTime 
+                                    ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed shadow-none' 
+                                    : 'bg-rose-500 text-white hover:bg-rose-600 active:scale-95 shadow-rose-500/20'
+                                 }`}
+                              >
+                                 {submitLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <LogOut className="w-6 h-6" />}
+                                 {attendance.checkOutTime 
+                                    ? `Checked Out` 
+                                    : 'Finish Shift'}
+                              </button>
+
+                              {attendance.checkOutTime && (
+                                 <p className="text-center text-[10px] font-black text-emerald-500 uppercase tracking-widest animate-bounce">
+                                    Attendance Saved Successfully!
+                                 </p>
+                              )}
+                           </div>
+                        )}
+                     </div>
+                  </div>
+               </div>
+            </section>
             <section className="bg-white dark:bg-neutral-800/50 backdrop-blur-md rounded-[3rem] p-10 border border-neutral-100 dark:border-neutral-700 shadow-sm relative overflow-hidden">
                <h2 className="text-3xl font-black mb-8 text-neutral-800 dark:text-white flex items-center gap-3">
                   <CalendarDays className="w-8 h-8 text-sky-500" />

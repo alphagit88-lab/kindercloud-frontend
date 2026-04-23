@@ -24,6 +24,26 @@ import {
 } from 'lucide-react';
 import { teachersAPI, Teacher } from '@/lib/api/teachers';
 import { teacherOpsAPI, AttendanceRecord, SalaryRecord } from '@/lib/api/teacherOps';
+import { format } from 'date-fns';
+
+const LiveTimer = ({ checkInTime }: { checkInTime: string }) => {
+  const [elapsed, setElapsed] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const start = new Date(checkInTime).getTime();
+      const now = new Date().getTime();
+      const diff = now - start;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setElapsed(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [checkInTime]);
+
+  return <span className="font-mono text-emerald-500 font-black">{elapsed}</span>;
+};
 
 export default function TeacherManagementPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -453,34 +473,39 @@ export default function TeacherManagementPage() {
                              {historyLoading ? (
                                 <div className="py-10 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-200" /></div>
                              ) : attendanceHistory.length > 0 ? (
-                                attendanceHistory.map((record, i) => (
-                                   <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl">
-                                      <div className="flex items-center gap-4">
-                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] uppercase ${
-                                            record.status === 'present' ? 'bg-mint-50 text-mint-500' : 
-                                            record.status === 'late' ? 'bg-amber-50 text-amber-500' :
-                                            record.status === 'leave' ? 'bg-sky-50 text-sky-500' : 'bg-rose-50 text-rose-500'
-                                         }`}>
-                                            {record.status === 'present' ? 'P' : record.status === 'late' ? 'L' : record.status === 'leave' ? 'LV' : record.status === 'half-day' ? 'HD' : 'A'}
-                                         </div>
-                                         <div>
-                                            <p className="text-sm font-black text-slate-800">{new Date(record.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                                            <p className="text-[10px] font-bold text-slate-400">
-                                                {record.checkInTime ? `IN: ${new Date(record.checkInTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` : 'No Check-in'}
-                                                {record.checkOutTime ? ` • OUT: ${new Date(record.checkOutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` : ''}
-                                            </p>
-                                         </div>
-                                      </div>
-                                      {record.note && (
-                                         <div className="group relative">
-                                            <AlertCircle className="w-4 h-4 text-amber-400 cursor-help" />
-                                            <div className="absolute right-0 bottom-full mb-2 w-48 p-3 bg-slate-800 text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                               {record.note}
-                                            </div>
-                                         </div>
-                                      )}
-                                   </div>
-                                ))
+                                 attendanceHistory.map((record, i) => (
+                                    <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl transition-all hover:border-emerald-200">
+                                       <div className="flex items-center gap-4">
+                                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] uppercase ${
+                                             record.status === 'present' ? 'bg-emerald-50 text-emerald-500' : 
+                                             record.status === 'late' ? 'bg-amber-50 text-amber-500' :
+                                             record.status === 'leave' ? 'bg-sky-50 text-sky-500' : 'bg-rose-50 text-rose-500'
+                                          }`}>
+                                             {record.status === 'present' ? 'P' : record.status === 'late' ? 'L' : record.status === 'leave' ? 'LV' : record.status === 'half-day' ? 'HD' : 'A'}
+                                          </div>
+                                          <div>
+                                             <p className="text-sm font-black text-slate-800">{format(new Date(record.date), 'MMM dd, yyyy')}</p>
+                                             <p className="text-[10px] font-bold text-slate-400 flex items-center gap-2">
+                                                {record.checkInTime ? `IN: ${format(new Date(record.checkInTime), 'hh:mm a')}` : 'No Check-in'}
+                                                {record.checkOutTime ? ` • OUT: ${format(new Date(record.checkOutTime), 'hh:mm a')}` : 
+                                                 record.status === 'present' ? (
+                                                    <span className="flex items-center gap-1">
+                                                       • ACTIVE: <LiveTimer checkInTime={record.checkInTime!} />
+                                                    </span>
+                                                 ) : ''}
+                                             </p>
+                                          </div>
+                                       </div>
+                                       {record.note && (
+                                          <div className="group relative">
+                                             <AlertCircle className="w-4 h-4 text-amber-400 cursor-help" />
+                                             <div className="absolute right-0 bottom-full mb-2 w-48 p-3 bg-slate-800 text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                                {record.note}
+                                             </div>
+                                          </div>
+                                       )}
+                                    </div>
+                                 ))
                              ) : (
                                 <div className="py-10 text-center text-xs font-bold text-slate-300 italic">No attendance records for this month.</div>
                              )}
