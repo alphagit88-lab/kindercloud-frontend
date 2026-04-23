@@ -24,7 +24,9 @@ export default function KidLayout({ children }: { children: ReactNode }) {
       */}
       <nav className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-50 pointer-events-none">
           <div className="bg-white/90 backdrop-blur-md px-8 py-4 rounded-[2rem] shadow-xl border-4 border-amber-200 dark:border-neutral-700 pointer-events-auto flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-700">
-            <span className="text-3xl">☁️</span>
+            <div className="w-12 h-12 bg-amber-400 rounded-full border-4 border-white flex items-center justify-center text-white font-black text-xl shadow-inner">
+               {user?.firstName?.[0] || 'L'}
+            </div>
             <span className="text-2xl font-black text-amber-500 tracking-tighter uppercase italic">
                 {user?.firstName || "Leo"}'s Magic Cloud
             </span>

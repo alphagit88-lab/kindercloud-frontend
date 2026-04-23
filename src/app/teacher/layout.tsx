@@ -71,7 +71,17 @@ export default function TeacherLayout({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        <div className="mt-auto">
+        <div className="mt-auto space-y-4">
+          <div className="bg-slate-50 dark:bg-neutral-800/50 rounded-3xl p-4 flex items-center gap-3">
+            <div className="w-10 h-10 bg-white dark:bg-neutral-800 rounded-xl border border-slate-100 dark:border-neutral-700 flex items-center justify-center text-slate-400 font-black text-xs shadow-sm">
+                {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+            </div>
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-black text-slate-800 dark:text-neutral-100 truncate leading-none mb-1">{user?.firstName} {user?.lastName}</p>
+                <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Classroom Teacher</p>
+            </div>
+          </div>
+
           <button 
             onClick={() => logout()}
             className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-slate-400 hover:bg-slate-50 dark:hover:bg-neutral-800 hover:text-rose-600 transition-all font-black text-sm uppercase tracking-widest group"
