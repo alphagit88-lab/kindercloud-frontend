@@ -12,21 +12,30 @@ async function apiFetch<T = any>(endpoint: string, options?: RequestInit): Promi
     fullUrl = fullUrl.replace('/api/api/', '/api/');
   }
 
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
   const response = await fetch(fullUrl, {
     ...options,
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...options?.headers,
     },
   });
 
-  const data = await response.json();
-
   if (!response.ok) {
-    throw new Error(data.error || 'An error occurred');
+    let errorMsg = 'An error occurred';
+    try {
+      const errorData = await response.json();
+      errorMsg = errorData.error || errorData.message || errorMsg;
+    } catch (e) {
+      errorMsg = `Server error: ${response.status} ${response.statusText}`;
+    }
+    throw new Error(errorMsg);
   }
 
+  const data = await response.json();
   return { data: data as T };
 }
 

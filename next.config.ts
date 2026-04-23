@@ -58,20 +58,16 @@ const nextConfig: NextConfig = {
       backendUrl = backendUrl.slice(0, -1);
     }
     
-    return {
-      fallback: [
-        {
-          source: '/proxied-backend/:path*',
-          // Proxy all routes unequivocally to the real backend server
-          destination: `${backendUrl}/:path*`,
-        },
-        {
-          source: '/uploads/:path*',
-          // Also proxy uploads serving if they check legacy paths
-          destination: `${backendUrl}/uploads/:path*`,
-        }
-      ]
-    };
+    return [
+      {
+        source: '/proxied-backend/:path*',
+        destination: `${backendUrl}/:path*`,
+      },
+      {
+        source: '/uploads/:path*',
+        destination: `${backendUrl}/uploads/:path*`,
+      }
+    ];
   },
 };
 

@@ -55,12 +55,15 @@ class AuthAPI {
       fullUrl = fullUrl.replace('/api/api/', '/api/');
     }
 
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+
     const response = await fetch(fullUrl, {
       ...options,
       cache: 'no-store',
       credentials: 'include', // Important: send cookies with requests
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...options?.headers,
       },
     });

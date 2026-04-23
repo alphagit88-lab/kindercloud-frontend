@@ -20,4 +20,13 @@ export const classroomsAPI = {
     const response = await api.get<ClassRoom>(`/api/classrooms/${id}`);
     return response.data;
   },
+
+  create: async (data: { name: string; teacherId?: string }): Promise<ClassRoom> => {
+    const response = await api.post<ClassRoom>('/api/classrooms', data);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/api/classrooms/${id}`);
+  },
 };

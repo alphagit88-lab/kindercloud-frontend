@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { 
   Users, 
   GraduationCap, 
@@ -15,16 +15,21 @@ import {
   Settings, 
   LogOut,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Home,
+  Clock
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/admin', color: 'sky' },
   { label: 'Student Management', icon: Users, path: '/admin/students', color: 'rose' },
+  { label: 'Classroom Structure', icon: Home, path: '/admin/classrooms', color: 'sky' },
   { label: 'Teacher Operations', icon: GraduationCap, path: '/admin/teachers', color: 'amber' },
   { label: 'Finance & Fees', icon: DollarSign, path: '/admin/finance', color: 'mint' },
-  { label: 'Stock & Assets', icon: Package, path: '/admin/stock', color: 'indigo' },
+  { label: 'Supply Inventory', icon: Package, path: '/admin/stock', color: 'indigo' },
+  { label: 'Asset Registry', icon: Database, path: '/admin/assets', color: 'sky' },
+  { label: 'Class Timetable', icon: Clock, path: '/admin/timetable', color: 'amber' },
   { label: 'School Events', icon: Calendar, path: '/admin/events', color: 'rose' },
 ];
 
@@ -37,6 +42,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     await logout();
     router.push('/login');
   };
+
+  useEffect(() => {
+    if (user === null) {
+      router.push('/login');
+    }
+  }, [user, router]);
 
   return (
     <div className="flex h-screen bg-[#f8fafc] font-sans">
