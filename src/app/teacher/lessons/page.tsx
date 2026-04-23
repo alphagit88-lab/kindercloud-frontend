@@ -15,7 +15,8 @@ import {
   ClipboardList,
   Home,
   AlertCircle,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react";
 import { lessonsAPI, Lesson, CreateLessonData } from '@/lib/api/lessons';
 import { classroomsAPI, ClassRoom } from '@/lib/api/classrooms';
@@ -319,6 +320,20 @@ export default function TeacherLessonsPage() {
                     value={formData.activity}
                     onChange={(e) => setFormData({...formData, activity: e.target.value})}
                     placeholder="What did the kids actually do?"
+                    className="w-full px-5 py-4 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all font-bold resize-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-neutral-400 ml-1 flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Learning Progress
+                  </label>
+                  <textarea 
+                    rows={3}
+                    value={formData.progress}
+                    onChange={(e) => setFormData({...formData, progress: e.target.value})}
+                    placeholder="General observations on class progress..."
                     className="w-full px-5 py-4 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all font-bold resize-none"
                   />
                 </div>
