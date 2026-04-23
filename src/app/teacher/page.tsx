@@ -18,7 +18,8 @@ import {
   Coffee,
   XCircle,
   Loader2,
-  LogOut
+  LogOut,
+  CalendarDays
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
