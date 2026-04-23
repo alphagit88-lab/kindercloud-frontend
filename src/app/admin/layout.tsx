@@ -29,6 +29,7 @@ const NAV_ITEMS = [
   { label: 'Finance & Fees', icon: DollarSign, path: '/admin/finance', color: 'mint' },
   { label: 'Supply Inventory', icon: Package, path: '/admin/stock', color: 'indigo' },
   { label: 'Asset Registry', icon: Database, path: '/admin/assets', color: 'sky' },
+  { label: 'Attendance Logs', icon: Clock, path: '/admin/attendance', color: 'sky' },
   { label: 'Class Timetable', icon: Clock, path: '/admin/timetable', color: 'amber' },
   { label: 'School Events', icon: Calendar, path: '/admin/events', color: 'rose' },
 ];

@@ -20,7 +20,8 @@ import {
   Clock,
   ChevronRight,
   Coffee,
-  AlertCircle
+  AlertCircle,
+  XCircle
 } from 'lucide-react';
 import { teachersAPI, Teacher } from '@/lib/api/teachers';
 import { teacherOpsAPI, AttendanceRecord, SalaryRecord } from '@/lib/api/teacherOps';
@@ -426,46 +427,71 @@ export default function TeacherManagementPage() {
               </div>
 
               <div className="p-10">
-                 {opsType === 'attendance' ? (
-                    <div className="space-y-8">
-                       <form onSubmit={handleMarkAttendance} className="space-y-6 bg-slate-50 dark:bg-neutral-900/50 p-6 rounded-[2rem] border border-slate-100 dark:border-neutral-700">
-                          <div className="grid grid-cols-2 gap-3">
-                             {[
-                                { id: 'present', label: 'Present', color: 'mint', icon: Check },
-                                { id: 'absent', label: 'Absent', color: 'rose', icon: X },
-                                { id: 'late', label: 'Late', color: 'amber', icon: Clock },
-                                { id: 'leave', label: 'Leave', color: 'sky', icon: ChevronRight },
-                                { id: 'half-day', label: 'Half Day', color: 'indigo', icon: Coffee },
-                             ].map((s) => (
-                                <button 
-                                 type="button"
-                                 key={s.id}
-                                 onClick={() => setAttendanceData({...attendanceData, status: s.id})}
-                                 className={`flex items-center gap-3 p-4 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all ${
-                                    attendanceData.status === s.id ? `bg-${s.color}-500 text-white border-${s.color}-500 shadow-lg shadow-${s.color}-500/10` : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'
-                                 }`}
-                                >
-                                   <s.icon className="w-4 h-4" />
-                                   {s.label}
-                                </button>
-                             ))}
-                          </div>
-                          <div className="space-y-2">
-                             <input 
-                               className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-white focus:border-amber-500 font-bold text-sm outline-none transition-all"
-                               placeholder="Note / Late reason..."
-                               value={attendanceData.note}
-                               onChange={(e) => setAttendanceData({...attendanceData, note: e.target.value})}
-                             />
-                          </div>
-                          <button 
-                            type="submit" 
-                            disabled={createLoading}
-                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 disabled:opacity-50"
-                          >
-                             {createLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update Attendance'}
-                          </button>
-                       </form>
+                  {opsType === 'attendance' ? (
+                     <div className="space-y-8">
+                        {/* Today's Live Status - Simplified for Admin */}
+                        <div className="bg-slate-50 dark:bg-neutral-900/50 p-8 rounded-[2.5rem] border border-slate-100 dark:border-neutral-700 flex flex-col items-center text-center space-y-4">
+                           {(() => {
+                              const today = format(new Date(), 'yyyy-MM-dd');
+                              const todayRecord = attendanceHistory.find(r => r.date === today);
+                              
+                              if (!todayRecord) {
+                                 return (
+                                    <>
+                                       <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400">
+                                          <XCircle className="w-8 h-8" />
+                                       </div>
+                                       <div>
+                                          <p className="text-sm font-black text-slate-800 uppercase tracking-widest">No Activity Today</p>
+                                          <p className="text-[10px] font-bold text-slate-400 mt-1">Teacher has not checked in yet.</p>
+                                       </div>
+                                    </>
+                                 );
+                              }
+
+                              const isActive = todayRecord.status === 'present' && !todayRecord.checkOutTime;
+
+                              return (
+                                 <>
+                                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all ${
+                                       isActive ? 'bg-emerald-500 text-white animate-pulse' : 'bg-amber-100 text-amber-600'
+                                    }`}>
+                                       {isActive ? <Clock className="w-8 h-8" /> : 
+                                        todayRecord.status === 'leave' ? <Coffee className="w-8 h-8 text-sky-500" /> :
+                                        todayRecord.status === 'half-day' ? <Coffee className="w-8 h-8 text-indigo-500" /> :
+                                        <CheckCircle2 className="w-8 h-8" />}
+                                    </div>
+                                    <div>
+                                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">
+                                          {isActive ? 'Active Work Session' : 'Today\'s Final Status'}
+                                       </p>
+                                       <p className={`text-3xl font-black tracking-tighter ${
+                                          isActive ? 'text-emerald-500' : 'text-slate-800'
+                                       }`}>
+                                          {isActive ? <LiveTimer checkInTime={todayRecord.checkInTime!} /> : todayRecord.status.toUpperCase()}
+                                       </p>
+                                       {todayRecord.checkInTime && (
+                                          <div className="flex items-center justify-center gap-4 mt-4 py-2 px-4 bg-white rounded-xl border border-slate-100">
+                                             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                In: <span className="text-slate-800 ml-1">{format(new Date(todayRecord.checkInTime), 'hh:mm a')}</span>
+                                             </div>
+                                             {todayRecord.checkOutTime && (
+                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-l pl-4">
+                                                   Out: <span className="text-slate-800 ml-1">{format(new Date(todayRecord.checkOutTime), 'hh:mm a')}</span>
+                                                </div>
+                                             )}
+                                          </div>
+                                       )}
+                                       {todayRecord.note && (
+                                          <p className="mt-4 text-[11px] font-medium text-amber-600 bg-amber-50 py-2 px-4 rounded-lg italic">
+                                             "{todayRecord.note}"
+                                          </p>
+                                       )}
+                                    </div>
+                                 </>
+                              );
+                           })()}
+                        </div>
 
                        <div className="space-y-4">
                           <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Monthly History</h3>
