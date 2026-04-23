@@ -65,6 +65,18 @@ export const teachersAPI = {
   delete: async (id: string) => {
     const response = await api.delete(`/api/teachers/${id}`);
     return response.data;
+  },
+  markAttendance: async (data: { status: string; note?: string; date?: string; teacherId?: string }) => {
+    const response = await api.post('/api/teachers/attendance/mark', data);
+    return response.data;
+  },
+  checkOut: async () => {
+    const response = await api.post('/api/teachers/attendance/checkout', {});
+    return response.data;
+  },
+  getAttendanceHistory: async (teacherId: string) => {
+    const response = await api.get(`/api/teachers/attendance/${teacherId}`);
+    return response.data;
   }
 };
 

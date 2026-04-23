@@ -18,7 +18,9 @@ import {
   Check,
   CalendarDays,
   Clock,
-  ChevronRight
+  ChevronRight,
+  Coffee,
+  AlertCircle
 } from 'lucide-react';
 import { teachersAPI, Teacher } from '@/lib/api/teachers';
 import { teacherOpsAPI, AttendanceRecord, SalaryRecord } from '@/lib/api/teacherOps';
@@ -56,6 +58,9 @@ export default function TeacherManagementPage() {
     year: new Date().getFullYear(),
     paymentMethod: 'bank_transfer'
   });
+
+  const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   useEffect(() => {
     fetchTeachers();
@@ -144,10 +149,21 @@ export default function TeacherManagementPage() {
     `${t.user.firstName} ${t.user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const openOps = (teacher: Teacher, type: 'attendance' | 'salary') => {
+  const openOps = async (teacher: Teacher, type: 'attendance' | 'salary') => {
     setSelectedTeacher(teacher);
     setOpsType(type);
     if (type === 'salary') setSalaryData({...salaryData, amount: (teacher.baseSalary || 0).toString()});
+    if (type === 'attendance') {
+        setHistoryLoading(true);
+        try {
+            const history = await teacherOpsAPI.getAttendance(teacher.id);
+            setAttendanceHistory(history);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setHistoryLoading(false);
+        }
+    }
     setIsOpsModalOpen(true);
   };
 
@@ -391,47 +407,86 @@ export default function TeacherManagementPage() {
 
               <div className="p-10">
                  {opsType === 'attendance' ? (
-                   <form onSubmit={handleMarkAttendance} className="space-y-8">
-                      <div className="space-y-4">
-                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Duty Status</label>
-                         <div className="grid grid-cols-2 gap-4">
-                            {[
-                               { id: 'present', label: 'Present', color: 'mint', icon: Check },
-                               { id: 'absent', label: 'Absent', color: 'rose', icon: X },
-                               { id: 'late', label: 'Late', color: 'amber', icon: Clock },
-                               { id: 'on_leave', label: 'Leave', color: 'sky', icon: ChevronRight },
-                            ].map((s) => (
-                               <button 
-                                type="button"
-                                key={s.id}
-                                onClick={() => setAttendanceData({...attendanceData, status: s.id})}
-                                className={`flex items-center gap-3 p-4 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all ${
-                                   attendanceData.status === s.id ? `bg-${s.color}-500 text-white border-${s.color}-500 shadow-lg shadow-${s.color}-500/10` : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'
-                                }`}
-                               >
-                                  <s.icon className="w-4 h-4" />
-                                  {s.label}
-                               </button>
-                            ))}
-                         </div>
-                      </div>
-                      <div className="space-y-2">
-                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Optional Note</label>
-                         <textarea 
-                           className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-amber-500 font-bold text-sm outline-none transition-all h-24 resize-none"
-                           placeholder="e.g. Arrived 15 mins late due to traffic"
-                           value={attendanceData.note}
-                           onChange={(e) => setAttendanceData({...attendanceData, note: e.target.value})}
-                         />
-                      </div>
-                      <button 
-                        type="submit" 
-                        disabled={createLoading}
-                        className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 disabled:opacity-50"
-                      >
-                         {createLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Log Attendance'}
-                      </button>
-                   </form>
+                    <div className="space-y-8">
+                       <form onSubmit={handleMarkAttendance} className="space-y-6 bg-slate-50 dark:bg-neutral-900/50 p-6 rounded-[2rem] border border-slate-100 dark:border-neutral-700">
+                          <div className="grid grid-cols-2 gap-3">
+                             {[
+                                { id: 'present', label: 'Present', color: 'mint', icon: Check },
+                                { id: 'absent', label: 'Absent', color: 'rose', icon: X },
+                                { id: 'late', label: 'Late', color: 'amber', icon: Clock },
+                                { id: 'leave', label: 'Leave', color: 'sky', icon: ChevronRight },
+                                { id: 'half-day', label: 'Half Day', color: 'indigo', icon: Coffee },
+                             ].map((s) => (
+                                <button 
+                                 type="button"
+                                 key={s.id}
+                                 onClick={() => setAttendanceData({...attendanceData, status: s.id})}
+                                 className={`flex items-center gap-3 p-4 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all ${
+                                    attendanceData.status === s.id ? `bg-${s.color}-500 text-white border-${s.color}-500 shadow-lg shadow-${s.color}-500/10` : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'
+                                 }`}
+                                >
+                                   <s.icon className="w-4 h-4" />
+                                   {s.label}
+                                </button>
+                             ))}
+                          </div>
+                          <div className="space-y-2">
+                             <input 
+                               className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-white focus:border-amber-500 font-bold text-sm outline-none transition-all"
+                               placeholder="Note / Late reason..."
+                               value={attendanceData.note}
+                               onChange={(e) => setAttendanceData({...attendanceData, note: e.target.value})}
+                             />
+                          </div>
+                          <button 
+                            type="submit" 
+                            disabled={createLoading}
+                            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 disabled:opacity-50"
+                          >
+                             {createLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update Attendance'}
+                          </button>
+                       </form>
+
+                       <div className="space-y-4">
+                          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Monthly History</h3>
+                          <div className="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                             {historyLoading ? (
+                                <div className="py-10 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-200" /></div>
+                             ) : attendanceHistory.length > 0 ? (
+                                attendanceHistory.map((record, i) => (
+                                   <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl">
+                                      <div className="flex items-center gap-4">
+                                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] uppercase ${
+                                            record.status === 'present' ? 'bg-mint-50 text-mint-500' : 
+                                            record.status === 'late' ? 'bg-amber-50 text-amber-500' :
+                                            record.status === 'leave' ? 'bg-sky-50 text-sky-500' : 'bg-rose-50 text-rose-500'
+                                         }`}>
+                                            {record.status === 'present' ? 'P' : record.status === 'late' ? 'L' : record.status === 'leave' ? 'LV' : record.status === 'half-day' ? 'HD' : 'A'}
+                                         </div>
+                                         <div>
+                                            <p className="text-sm font-black text-slate-800">{new Date(record.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                                            <p className="text-[10px] font-bold text-slate-400">
+                                                {record.checkInTime ? `IN: ${new Date(record.checkInTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` : 'No Check-in'}
+                                                {record.checkOutTime ? ` • OUT: ${new Date(record.checkOutTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` : ''}
+                                            </p>
+                                         </div>
+                                      </div>
+                                      {record.note && (
+                                         <div className="group relative">
+                                            <AlertCircle className="w-4 h-4 text-amber-400 cursor-help" />
+                                            <div className="absolute right-0 bottom-full mb-2 w-48 p-3 bg-slate-800 text-white text-[10px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                               {record.note}
+                                            </div>
+                                         </div>
+                                      )}
+                                   </div>
+                                ))
+                             ) : (
+                                <div className="py-10 text-center text-xs font-bold text-slate-300 italic">No attendance records for this month.</div>
+                             )}
+                          </div>
+                       </div>
+                    </div>
                  ) : (
                    <form onSubmit={handleProcessSalary} className="space-y-8">
                       <div className="grid grid-cols-2 gap-6">
