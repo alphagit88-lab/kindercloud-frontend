@@ -15,7 +15,8 @@ import {
   ClipboardList,
   Home,
   AlertCircle,
-  Loader2
+  Loader2,
+  Sparkles
 } from "lucide-react";
 import { lessonsAPI, Lesson, CreateLessonData } from '@/lib/api/lessons';
 import { classroomsAPI, ClassRoom } from '@/lib/api/classrooms';
