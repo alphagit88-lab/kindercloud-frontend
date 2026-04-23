@@ -4,7 +4,9 @@ export interface AttendanceRecord {
   id: string;
   teacherId: string;
   date: string;
-  status: 'present' | 'absent' | 'late' | 'on_leave';
+  status: 'present' | 'absent' | 'late' | 'leave' | 'half-day';
+  checkInTime?: string;
+  checkOutTime?: string;
   note?: string;
 }
 
