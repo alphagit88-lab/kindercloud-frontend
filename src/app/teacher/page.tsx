@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from "react";
 import { 
   Smile, 
   Calendar, 
@@ -11,10 +12,17 @@ import {
   ArrowRight,
   ClipboardList,
   Camera,
-  Heart
+  Heart,
+  CheckCircle2,
+  AlertCircle,
+  Coffee,
+  XCircle,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { teachersAPI } from "@/lib/api/teachers";
+import { format } from "date-fns";
 
 const QUICK_ACTIONS = [
   { title: 'Log Lesson', icon: BookOpen, color: 'text-rose-500', bg: 'bg-rose-50', link: '/teacher/lessons' },
@@ -25,6 +33,57 @@ const QUICK_ACTIONS = [
 
 export default function TeacherDashboardPage() {
   const { user } = useAuth();
+  const [attendance, setAttendance] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<'late' | 'leave' | 'half-day'>('late');
+  const [note, setNote] = useState('');
+  const [submitLoading, setSubmitLoading] = useState(false);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchAttendance();
+    }
+  }, [user]);
+
+  const fetchAttendance = async () => {
+    try {
+      const history = await teachersAPI.getAttendanceHistory(user!.id);
+      const today = new Date().toISOString().split('T')[0];
+      const todayRecord = history.find((h: any) => h.date === today);
+      setAttendance(todayRecord || null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMark = async (status: string, reason?: string) => {
+    setSubmitLoading(true);
+    try {
+      await teachersAPI.markAttendance({ status, note: reason });
+      await fetchAttendance();
+      setIsModalOpen(false);
+      setNote('');
+    } catch (err) {
+      alert("Failed to update attendance");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const handleCheckOut = async () => {
+    setSubmitLoading(true);
+    try {
+      await teachersAPI.checkOut();
+      await fetchAttendance();
+    } catch (err) {
+      alert("Failed to check out");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -71,6 +130,65 @@ export default function TeacherDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Main Content Area */}
         <div className="lg:col-span-2 space-y-8">
+           {/* Attendance Card */}
+           <section className="bg-white dark:bg-neutral-800 p-8 rounded-[3rem] border border-sky-100 dark:border-neutral-700 shadow-xl shadow-sky-500/5 relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+                 <div>
+                    <h2 className="text-2xl font-black text-neutral-800 dark:text-white flex items-center gap-3 mb-2">
+                       <CheckCircle2 className="w-7 h-7 text-emerald-500" />
+                       Attendance & Check-in
+                    </h2>
+                    <p className="text-sm font-bold text-neutral-400">
+                       {attendance 
+                         ? `Status: ${attendance.status.toUpperCase()} ${attendance.checkInTime ? `at ${format(new Date(attendance.checkInTime), 'hh:mm a')}` : ''}`
+                         : 'You haven\'t checked in yet for today.'}
+                    </p>
+                 </div>
+
+                 <div className="flex flex-wrap gap-3 w-full sm:w-auto">
+                    {!attendance || (attendance.status !== 'present' && attendance.status !== 'late') ? (
+                       <>
+                          <button 
+                            onClick={() => handleMark('present')}
+                            disabled={submitLoading}
+                            className="flex-1 sm:flex-none px-6 py-3 bg-emerald-500 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
+                          >
+                             {submitLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                             Check In
+                          </button>
+                          <button 
+                            onClick={() => { setModalType('late'); setIsModalOpen(true); }}
+                            className="flex-1 sm:flex-none px-6 py-3 bg-amber-100 text-amber-700 font-black rounded-2xl hover:bg-amber-200 transition-all active:scale-95 flex items-center justify-center gap-2"
+                          >
+                             <Clock className="w-5 h-5" />
+                             I'm Late
+                          </button>
+                       </>
+                    ) : (
+                       <button 
+                        onClick={handleCheckOut}
+                        disabled={!!attendance.checkOutTime || submitLoading}
+                        className={`flex-1 sm:flex-none px-6 py-3 font-black rounded-2xl transition-all flex items-center justify-center gap-2 ${
+                            attendance.checkOutTime 
+                            ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed' 
+                            : 'bg-rose-100 text-rose-700 hover:bg-rose-200 active:scale-95'
+                        }`}
+                       >
+                          <LogOut className="w-5 h-5" />
+                          {attendance.checkOutTime ? `Checked Out at ${format(new Date(attendance.checkOutTime), 'hh:mm a')}` : 'Check Out'}
+                       </button>
+                    )}
+                    
+                    <button 
+                        onClick={() => { setModalType('leave'); setIsModalOpen(true); }}
+                        className="flex-1 sm:flex-none px-6 py-3 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                        <Coffee className="w-5 h-5" />
+                        Request Leave
+                    </button>
+                 </div>
+              </div>
+           </section>
            <section className="bg-white dark:bg-neutral-800/50 backdrop-blur-md rounded-[3rem] p-10 border border-neutral-100 dark:border-neutral-700 shadow-sm relative overflow-hidden">
               <h2 className="text-3xl font-black mb-8 text-neutral-800 dark:text-white flex items-center gap-3">
                  <Clock className="w-8 h-8 text-amber-500" />
@@ -143,6 +261,67 @@ export default function TeacherDashboardPage() {
            </div>
         </div>
       </div>
+
+      {/* Attendance Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-neutral-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-6">
+            <div className="bg-white dark:bg-neutral-800 w-full max-w-md rounded-[3rem] p-10 shadow-2xl animate-in fade-in zoom-in-95 duration-300">
+                <div className="flex justify-between items-start mb-8">
+                    <div>
+                        <h2 className="text-3xl font-black text-neutral-800 dark:text-white italic">
+                            {modalType === 'late' ? 'Running Late?' : modalType === 'half-day' ? 'Half Day Request' : 'Leave Request'}
+                        </h2>
+                        <p className="text-neutral-400 font-bold mt-1">Please provide a reason or note below.</p>
+                    </div>
+                    <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full transition-colors">
+                        <XCircle className="w-6 h-6 text-neutral-300" />
+                    </button>
+                </div>
+
+                <div className="space-y-6">
+                    {modalType !== 'late' && (
+                        <div className="flex gap-4">
+                            <button 
+                                onClick={() => setModalType('leave')}
+                                className={`flex-1 py-4 rounded-2xl font-black text-xs uppercase tracking-widest border-2 transition-all ${
+                                    modalType === 'leave' ? 'bg-sky-500 border-sky-600 text-white shadow-lg shadow-sky-500/20' : 'bg-white text-slate-400 border-slate-100'
+                                }`}
+                            >
+                                Full Day
+                            </button>
+                            <button 
+                                onClick={() => setModalType('half-day')}
+                                className={`flex-1 py-4 rounded-2xl font-black text-xs uppercase tracking-widest border-2 transition-all ${
+                                    modalType === 'half-day' ? 'bg-sky-500 border-sky-600 text-white shadow-lg shadow-sky-500/20' : 'bg-white text-slate-400 border-slate-100'
+                                }`}
+                            >
+                                Half Day
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Your Reason / Message</label>
+                        <textarea 
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            placeholder={modalType === 'late' ? "Traffic, personal emergency..." : "Family event, medical appointment..."}
+                            className="w-full bg-slate-50 dark:bg-neutral-900 border-2 border-slate-100 dark:border-neutral-700 rounded-3xl p-6 font-bold text-slate-700 dark:text-white h-40 focus:border-sky-500 focus:outline-none transition-all resize-none"
+                        />
+                    </div>
+
+                    <button 
+                        onClick={() => handleMark(modalType, note)}
+                        disabled={submitLoading || (modalType === 'late' && !note)}
+                        className="w-full py-5 bg-slate-900 text-white font-black rounded-3xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-[0.2em] text-sm flex items-center justify-center gap-3"
+                    >
+                        {submitLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+                        Submit Request
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
