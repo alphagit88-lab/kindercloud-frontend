@@ -33,6 +33,10 @@ export const studentsAPI = {
     const response = await api.post('/api/students', data);
     return response.data;
   },
+  update: async (id: string, data: any) => {
+    const response = await api.put(`/api/students/${id}`, data);
+    return response.data;
+  },
   delete: async (id: string) => {
     const response = await api.delete(`/api/students/${id}`);
     return response.data;
