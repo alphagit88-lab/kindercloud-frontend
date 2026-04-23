@@ -18,7 +18,9 @@ import {
   Check,
   CalendarDays,
   Clock,
-  ChevronRight
+  ChevronRight,
+  Coffee,
+  AlertCircle
 } from 'lucide-react';
 import { teachersAPI, Teacher } from '@/lib/api/teachers';
 import { teacherOpsAPI, AttendanceRecord, SalaryRecord } from '@/lib/api/teacherOps';
