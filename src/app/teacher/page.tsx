@@ -33,6 +33,7 @@ const QUICK_ACTIONS = [
 ];
 
 export default function TeacherDashboardPage() {
+  const { user } = useAuth();
   const [attendance, setAttendance] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
