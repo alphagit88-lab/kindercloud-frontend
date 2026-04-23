@@ -11,6 +11,11 @@ export interface Lesson {
   progress?: string;
   homework?: string;
   assessment?: string;
+  teacher?: {
+    firstName: string;
+    lastName: string;
+    profilePicture?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

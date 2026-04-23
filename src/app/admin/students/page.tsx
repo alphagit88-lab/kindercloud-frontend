@@ -34,8 +34,9 @@ export default function StudentManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     firstName: '',
     lastName: '',
     email: '',
@@ -53,7 +54,9 @@ export default function StudentManagementPage() {
       phone: '',
       relationship: 'Parent'
     }
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
     fetchData();
@@ -84,17 +87,48 @@ export default function StudentManagementPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleEdit = (student: Student) => {
+    setSelectedStudent(student);
+    setFormData({
+      firstName: student.user.firstName,
+      lastName: student.user.lastName,
+      email: student.user.email,
+      password: '', // Don't show password on edit
+      gender: student.gender || 'Other',
+      dateOfBirth: student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : '',
+      classRoomId: student.classRoomId || '',
+      address: student.address || '',
+      emergencyContact: student.emergencyContact || '',
+      medicalNotes: student.medicalNotes || '',
+      guardianInfo: student.user.guardianLinksAsKid?.[0]?.parent ? {
+        firstName: student.user.guardianLinksAsKid[0].parent.firstName,
+        lastName: student.user.guardianLinksAsKid[0].parent.lastName,
+        email: student.user.guardianLinksAsKid[0].parent.email,
+        phone: student.user.guardianLinksAsKid[0].parent.phone || '',
+        relationship: 'Parent'
+      } : initialFormState.guardianInfo
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateLoading(true);
     try {
-      await studentsAPI.create(formData);
-      setSuccessMessage('Student Enrollment Successful!');
+      if (selectedStudent) {
+        await studentsAPI.update(selectedStudent.user.id, formData);
+        setSuccessMessage('Student Updated Successfully!');
+      } else {
+        await studentsAPI.create(formData);
+        setSuccessMessage('Student Enrollment Successful!');
+      }
       setIsModalOpen(false);
       fetchData();
+      setSelectedStudent(null);
+      setFormData(initialFormState);
       setTimeout(() => setSuccessMessage(''), 5000);
     } catch (error) {
-      alert('Failed to enroll student');
+      alert(`Failed to ${selectedStudent ? 'update' : 'enroll'} student`);
     } finally {
       setCreateLoading(false);
     }
@@ -132,7 +166,11 @@ export default function StudentManagementPage() {
               />
            </div>
            <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              setSelectedStudent(null);
+              setFormData(initialFormState);
+              setIsModalOpen(true);
+            }}
             className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-800 shadow-xl shadow-slate-900/10 hover:scale-[1.02] active:scale-[0.98] transition-all"
            >
               <Plus className="w-5 h-5" />
@@ -203,7 +241,12 @@ export default function StudentManagementPage() {
                       </div>
                       <div>
                         <p className="text-base font-black text-slate-800 leading-none mb-1">{s.user.firstName} {s.user.lastName}</p>
-                        <p className="text-xs font-bold text-slate-400">{s.user.email}</p>
+                        <p className="text-[10px] font-bold text-slate-400">{s.user.email}</p>
+                        {s.user.guardianLinksAsKid?.[0] && (
+                          <p className="text-[9px] font-black text-sky-500 uppercase tracking-tighter mt-1 flex items-center gap-1">
+                            <Heart className="w-2 h-2 fill-current" /> {s.user.guardianLinksAsKid[0].parent.email}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -225,7 +268,10 @@ export default function StudentManagementPage() {
                   </td>
                   <td className="px-10 py-6">
                     <div className="flex items-center justify-center gap-2">
-                       <button className="p-3 text-slate-400 hover:text-sky-500 hover:bg-sky-50 rounded-xl transition-all">
+                       <button 
+                        onClick={() => handleEdit(s)}
+                        className="p-3 text-slate-400 hover:text-sky-500 hover:bg-sky-50 rounded-xl transition-all"
+                       >
                           <Edit3 className="w-5 h-5" />
                        </button>
                        <button 
@@ -263,7 +309,7 @@ export default function StudentManagementPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-10 space-y-12">
-                 <form id="enrollment-form" onSubmit={handleCreate} className="space-y-10">
+                 <form id="enrollment-form" onSubmit={handleSubmit} className="space-y-10">
                     
                     {/* Student Details Section */}
                     <div className="space-y-6">
@@ -413,7 +459,7 @@ export default function StudentManagementPage() {
                       <Loader2 className="w-6 h-6 animate-spin text-sky-400" />
                     ) : (
                       <>
-                        <span>Finalize Student Enrollment</span>
+                        <span>{selectedStudent ? 'Update Student Details' : 'Finalize Student Enrollment'}</span>
                         <CheckCircle2 className="w-6 h-6 text-mint-500" />
                       </>
                     )}
