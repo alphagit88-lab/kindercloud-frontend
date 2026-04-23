@@ -33,13 +33,14 @@ const QUICK_ACTIONS = [
 ];
 
 export default function TeacherDashboardPage() {
-  const { user } = useAuth();
   const [attendance, setAttendance] = useState<any>(null);
+  const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'late' | 'leave' | 'half-day'>('late');
   const [note, setNote] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [workHours, setWorkHours] = useState('00:00:00');
 
   useEffect(() => {
     if (user?.id) {
@@ -47,11 +48,32 @@ export default function TeacherDashboardPage() {
     }
   }, [user]);
 
+  useEffect(() => {
+    let interval: any;
+    if (attendance?.checkInTime && !attendance.checkOutTime) {
+      interval = setInterval(() => {
+        const checkIn = new Date(attendance.checkInTime).getTime();
+        const now = new Date().getTime();
+        const diff = now - checkIn;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setWorkHours(
+          `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+        );
+      }, 1000);
+    } else {
+      setWorkHours('00:00:00');
+    }
+    return () => clearInterval(interval);
+  }, [attendance]);
+
   const fetchAttendance = async () => {
     try {
-      const history = await teachersAPI.getAttendanceHistory(user!.id);
+      const data = await teachersAPI.getAttendanceHistory(user!.id);
+      setHistory(data);
       const today = new Date().toISOString().split('T')[0];
-      const todayRecord = history.find((h: any) => h.date === today);
+      const todayRecord = data.find((h: any) => h.date === today);
       setAttendance(todayRecord || null);
     } catch (err) {
       console.error(err);
@@ -139,11 +161,19 @@ export default function TeacherDashboardPage() {
                        <CheckCircle2 className="w-7 h-7 text-emerald-500" />
                        Attendance & Check-in
                     </h2>
-                    <p className="text-sm font-bold text-neutral-400">
-                       {attendance 
-                         ? `Status: ${attendance.status.toUpperCase()} ${attendance.checkInTime ? `at ${format(new Date(attendance.checkInTime), 'hh:mm a')}` : ''}`
-                         : 'You haven\'t checked in yet for today.'}
-                    </p>
+                    <div className="flex items-center gap-4">
+                        <p className="text-sm font-bold text-neutral-400">
+                        {attendance 
+                            ? `Status: ${attendance.status.toUpperCase()} ${attendance.checkInTime ? `at ${format(new Date(attendance.checkInTime), 'hh:mm a')}` : ''}`
+                            : 'You haven\'t checked in yet for today.'}
+                        </p>
+                        {attendance?.checkInTime && !attendance.checkOutTime && (
+                            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 rounded-full border border-emerald-100">
+                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest font-mono">{workHours}</span>
+                            </div>
+                        )}
+                    </div>
                  </div>
 
                  <div className="flex flex-wrap gap-3 w-full sm:w-auto">
@@ -190,37 +220,45 @@ export default function TeacherDashboardPage() {
                  </div>
               </div>
            </section>
-           <section className="bg-white dark:bg-neutral-800/50 backdrop-blur-md rounded-[3rem] p-10 border border-neutral-100 dark:border-neutral-700 shadow-sm relative overflow-hidden">
-              <h2 className="text-3xl font-black mb-8 text-neutral-800 dark:text-white flex items-center gap-3">
-                 <Clock className="w-8 h-8 text-amber-500" />
-                 Upcoming Schedule
-              </h2>
-              
-              <div className="space-y-6">
-                 {[
-                   { time: '09:00 AM', event: 'Morning Meet & Greet', room: 'Little Owls (A)', desc: 'Circle time and daily greeting songs.' },
-                   { time: '10:30 AM', event: 'Creative Colors Workshop', room: 'Busy Bees (B)', desc: 'Exploring primary colors with finger paints.' }
-                 ].map((item, idx) => (
-                   <div key={idx} className="flex gap-6 p-6 rounded-[2rem] bg-neutral-50 dark:bg-neutral-900 shadow-inner group hover:bg-white dark:hover:hover:bg-neutral-800 transition-all border border-transparent hover:border-amber-100">
-                      <div className="shrink-0 flex flex-col items-center">
-                         <div className="text-sm font-black text-amber-600 mb-1">{item.time}</div>
-                         <div className="w-1 h-full bg-amber-100 dark:bg-neutral-700 rounded-full" />
-                      </div>
-                      <div>
-                         <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-xl font-black text-neutral-800 dark:text-neutral-100">{item.event}</h3>
-                            <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 rounded-full text-neutral-500">{item.room}</span>
-                         </div>
-                         <p className="text-neutral-500 dark:text-neutral-400 font-bold leading-relaxed">{item.desc}</p>
-                      </div>
-                   </div>
-                 ))}
-              </div>
-              
-              <button className="mt-8 w-full py-4 bg-amber-50 hover:bg-amber-100 text-amber-600 font-black rounded-2xl transition-all flex items-center justify-center gap-2 border border-amber-200/50 uppercase tracking-widest text-sm">
-                 Full Calendar <ArrowRight className="w-4 h-4" />
-              </button>
-           </section>
+            <section className="bg-white dark:bg-neutral-800/50 backdrop-blur-md rounded-[3rem] p-10 border border-neutral-100 dark:border-neutral-700 shadow-sm relative overflow-hidden">
+               <h2 className="text-3xl font-black mb-8 text-neutral-800 dark:text-white flex items-center gap-3">
+                  <CalendarDays className="w-8 h-8 text-sky-500" />
+                  Monthly Attendance History
+               </h2>
+               
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {history.length > 0 ? history.slice(0, 10).map((record, idx) => (
+                    <div key={idx} className="p-6 rounded-[2rem] bg-neutral-50 dark:bg-neutral-900 border border-transparent hover:border-sky-100 transition-all flex items-center justify-between">
+                       <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xs ${
+                             record.status === 'present' ? 'bg-emerald-100 text-emerald-600' : 
+                             record.status === 'late' ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600'
+                          }`}>
+                             {record.status === 'present' ? 'P' : record.status === 'late' ? 'L' : 'A'}
+                          </div>
+                          <div>
+                             <p className="font-black text-neutral-800 dark:text-neutral-100">{format(new Date(record.date), 'EEE, MMM dd')}</p>
+                             <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                                {record.checkInTime ? format(new Date(record.checkInTime), 'hh:mm a') : 'No Check-in'} 
+                                {record.checkOutTime ? ` - ${format(new Date(record.checkOutTime), 'hh:mm a')}` : ''}
+                             </p>
+                          </div>
+                       </div>
+                       {record.note && (
+                          <div className="p-2 bg-white dark:bg-neutral-800 rounded-lg shadow-sm">
+                             <AlertCircle className="w-4 h-4 text-amber-400" />
+                          </div>
+                       )}
+                    </div>
+                  )) : (
+                    <div className="col-span-full py-10 text-center text-neutral-400 italic font-bold">No history available.</div>
+                  )}
+               </div>
+
+               <button className="mt-8 w-full py-4 bg-sky-50 hover:bg-sky-100 text-sky-600 font-black rounded-2xl transition-all flex items-center justify-center gap-2 border border-sky-200/50 uppercase tracking-widest text-sm">
+                  View Full History <ArrowRight className="w-4 h-4" />
+               </button>
+            </section>
         </div>
 
         {/* Quick Access Sidebar */}
