@@ -5,26 +5,32 @@ import {
   GraduationCap, 
   Search, 
   Plus, 
-  MoreVertical, 
   Trash2, 
   Edit3, 
   Loader2,
   X,
   CheckCircle2,
-  Calendar,
   Award,
   DollarSign,
   Phone,
   Mail,
-  Briefcase
+  Briefcase,
+  Check,
+  CalendarDays,
+  Clock,
+  ChevronRight
 } from 'lucide-react';
 import { teachersAPI, Teacher } from '@/lib/api/teachers';
+import { teacherOpsAPI, AttendanceRecord, SalaryRecord } from '@/lib/api/teacherOps';
 
 export default function TeacherManagementPage() {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOpsModalOpen, setIsOpsModalOpen] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [opsType, setOpsType] = useState<'attendance' | 'salary'>('attendance');
   const [createLoading, setCreateLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -37,6 +43,18 @@ export default function TeacherManagementPage() {
     qualification: '',
     specialization: '',
     baseSalary: 0
+  });
+
+  const [attendanceData, setAttendanceData] = useState({
+    status: 'present' as any,
+    note: ''
+  });
+
+  const [salaryData, setSalaryData] = useState({
+    amount: '',
+    month: new Date().getMonth() + 1,
+    year: new Date().getFullYear(),
+    paymentMethod: 'bank_transfer'
   });
 
   useEffect(() => {
@@ -70,6 +88,48 @@ export default function TeacherManagementPage() {
     }
   };
 
+  const handleMarkAttendance = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTeacher) return;
+    setCreateLoading(true);
+    try {
+      await teacherOpsAPI.markAttendance({
+        teacherId: selectedTeacher.id,
+        ...attendanceData
+      });
+      setSuccessMessage('Attendance Marked!');
+      setIsOpsModalOpen(false);
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error) {
+      alert('Failed to mark attendance');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  const handleProcessSalary = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTeacher) return;
+    setCreateLoading(true);
+    try {
+      await teacherOpsAPI.processSalary({
+        teacherId: selectedTeacher.id,
+        amount: parseFloat(salaryData.amount),
+        month: salaryData.month,
+        year: salaryData.year,
+        paymentMethod: salaryData.paymentMethod,
+        status: 'paid'
+      });
+      setSuccessMessage('Salary Processed Successfully!');
+      setIsOpsModalOpen(false);
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error) {
+      alert('Failed to process salary');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   const handleDelete = async (userId: string) => {
     if (!confirm('Are you sure? This will permanently remove the teacher user.')) return;
     try {
@@ -83,6 +143,13 @@ export default function TeacherManagementPage() {
   const filteredTeachers = teachers.filter(t => 
     `${t.user.firstName} ${t.user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const openOps = (teacher: Teacher, type: 'attendance' | 'salary') => {
+    setSelectedTeacher(teacher);
+    setOpsType(type);
+    if (type === 'salary') setSalaryData({...salaryData, amount: (teacher.baseSalary || 0).toString()});
+    setIsOpsModalOpen(true);
+  };
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -120,24 +187,16 @@ export default function TeacherManagementPage() {
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         {[
-           { label: 'Academic Faculty', val: teachers.length, icon: Briefcase, color: 'amber' },
-           { label: 'Avg. Years Exp', val: '4.2', icon: Award, color: 'sky' },
-           { label: 'Active Salaries', val: teachers.length, icon: DollarSign, color: 'mint' },
-         ].map((s, i) => (
-           <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center justify-between group overflow-hidden relative">
-              <div className="flex flex-col gap-1 relative z-10">
-                 <div className="text-3xl font-black text-slate-800 tracking-tighter">{s.val}</div>
-                 <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">{s.label}</div>
-              </div>
-              <div className={`w-14 h-14 bg-${s.color}-50 rounded-2xl flex items-center justify-center text-${s.color}-500 relative z-10`}>
-                 <s.icon className="w-7 h-7" />
-              </div>
+      {/* Success Notification */}
+      {successMessage && (
+        <div className="p-6 bg-mint-50 border-2 border-mint-200 rounded-[2rem] flex items-center gap-4 animate-in slide-in-from-top-4 duration-500">
+           <CheckCircle2 className="w-8 h-8 text-mint-500 shadow-sm" />
+           <div>
+              <p className="text-sm font-black text-mint-900 uppercase tracking-widest leading-none mb-1">Success!</p>
+              <p className="text-xs font-bold text-mint-700">{successMessage}</p>
            </div>
-         ))}
-      </div>
+        </div>
+      )}
 
       {/* Registry Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -148,8 +207,8 @@ export default function TeacherManagementPage() {
           </div>
         ) : (
           filteredTeachers.length > 0 ? filteredTeachers.map((t) => (
-            <div key={t.id} className="bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group p-8 relative overflow-hidden">
-               <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none group-hover:scale-110 transition-transform">
+            <div key={t.id} className="bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all group p-8 relative overflow-hidden flex flex-col">
+               <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none group-hover:scale-110 transition-transform">
                   <GraduationCap className="w-32 h-32 text-slate-200" />
                </div>
                
@@ -163,33 +222,47 @@ export default function TeacherManagementPage() {
                      </div>
                   </div>
 
-                  <div className="mb-8">
+                  <div className="mb-6">
                      <h2 className="text-2xl font-black text-slate-800 leading-none mb-2">{t.user.firstName} {t.user.lastName}</h2>
                      <p className="text-sm font-bold text-slate-400">{t.specialization || 'General Education'}</p>
                   </div>
 
-                  <div className="space-y-3 mb-10 text-sm font-bold text-slate-500">
+                  <div className="space-y-3 mb-8 text-sm font-bold text-slate-500">
                      <div className="flex items-center gap-3">
                         <Mail className="w-4 h-4 text-slate-300" /> {t.user.email}
                      </div>
                      <div className="flex items-center gap-3">
-                        <Phone className="w-4 h-4 text-slate-300" /> {t.user.phone || 'No phone'}
-                     </div>
-                     <div className="flex items-center gap-3">
                         <Award className="w-4 h-4 text-amber-400" /> {t.qualification || 'No qualification added'}
+                     </div>
+                     <div className="flex items-center gap-2 pt-2">
+                        <DollarSign className="w-4 h-4 text-mint-500" />
+                        <span className="font-black text-slate-800 tracking-tight">${(t.baseSalary ?? 0).toLocaleString()}</span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Base</span>
                      </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-3 mb-8">
+                     <button 
+                      onClick={() => openOps(t, 'attendance')}
+                      className="flex items-center justify-center gap-2 py-3 bg-slate-50 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-50 hover:text-amber-600 transition-all border border-slate-100"
+                     >
+                        <CalendarDays className="w-3 h-3" />
+                        Attendance
+                     </button>
+                     <button 
+                      onClick={() => openOps(t, 'salary')}
+                      className="flex items-center justify-center gap-2 py-3 bg-slate-50 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-mint-50 hover:text-mint-600 transition-all border border-slate-100"
+                     >
+                        <DollarSign className="w-3 h-3" />
+                        Pay Salary
+                     </button>
+                  </div>
+
                   <div className="mt-auto pt-8 border-t border-slate-50 flex items-center justify-between">
-                     <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-mint-500" />
-                        <span className="font-black text-slate-800 text-sm tracking-tight">${(t.baseSalary ?? 0).toLocaleString()}</span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Base</span>
+                     <div className="flex gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Teacher ID: {t.id.substring(0, 8)}</span>
                      </div>
                      <div className="flex gap-2">
-                        <button className="p-3 text-slate-300 hover:text-sky-500 hover:bg-sky-50 rounded-xl transition-all">
-                           <Edit3 className="w-5 h-5" />
-                        </button>
                         <button 
                           onClick={() => handleDelete(t.user.id)}
                           className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
@@ -289,6 +362,123 @@ export default function TeacherManagementPage() {
                       </>
                     )}
                  </button>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Operations Modal (Attendance / Salary) */}
+      {isOpsModalOpen && selectedTeacher && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsOpsModalOpen(false)} />
+           <div className="relative w-full max-w-lg bg-white rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-10 bg-linear-to-br from-slate-50 to-white border-b border-slate-100 flex items-center justify-between">
+                 <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 font-black italic">
+                       {selectedTeacher.user.firstName.charAt(0)}
+                    </div>
+                    <div>
+                       <h2 className="text-xl font-display font-black text-slate-900 italic">{selectedTeacher.user.firstName} {selectedTeacher.user.lastName}</h2>
+                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 italic">
+                          {opsType === 'attendance' ? 'Daily Attendance Logging' : 'Monthly Salary Processing'}
+                       </p>
+                    </div>
+                 </div>
+                 <button onClick={() => setIsOpsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                    <X className="w-6 h-6 text-slate-300" />
+                 </button>
+              </div>
+
+              <div className="p-10">
+                 {opsType === 'attendance' ? (
+                   <form onSubmit={handleMarkAttendance} className="space-y-8">
+                      <div className="space-y-4">
+                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Duty Status</label>
+                         <div className="grid grid-cols-2 gap-4">
+                            {[
+                               { id: 'present', label: 'Present', color: 'mint', icon: Check },
+                               { id: 'absent', label: 'Absent', color: 'rose', icon: X },
+                               { id: 'late', label: 'Late', color: 'amber', icon: Clock },
+                               { id: 'on_leave', label: 'Leave', color: 'sky', icon: ChevronRight },
+                            ].map((s) => (
+                               <button 
+                                type="button"
+                                key={s.id}
+                                onClick={() => setAttendanceData({...attendanceData, status: s.id})}
+                                className={`flex items-center gap-3 p-4 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all ${
+                                   attendanceData.status === s.id ? `bg-${s.color}-500 text-white border-${s.color}-500 shadow-lg shadow-${s.color}-500/10` : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'
+                                }`}
+                               >
+                                  <s.icon className="w-4 h-4" />
+                                  {s.label}
+                               </button>
+                            ))}
+                         </div>
+                      </div>
+                      <div className="space-y-2">
+                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Optional Note</label>
+                         <textarea 
+                           className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-amber-500 font-bold text-sm outline-none transition-all h-24 resize-none"
+                           placeholder="e.g. Arrived 15 mins late due to traffic"
+                           value={attendanceData.note}
+                           onChange={(e) => setAttendanceData({...attendanceData, note: e.target.value})}
+                         />
+                      </div>
+                      <button 
+                        type="submit" 
+                        disabled={createLoading}
+                        className="w-full py-5 bg-slate-900 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 disabled:opacity-50"
+                      >
+                         {createLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Log Attendance'}
+                      </button>
+                   </form>
+                 ) : (
+                   <form onSubmit={handleProcessSalary} className="space-y-8">
+                      <div className="grid grid-cols-2 gap-6">
+                         <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Month</label>
+                            <select 
+                              className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white font-black text-[10px] uppercase tracking-widest"
+                              value={salaryData.month}
+                              onChange={(e) => setSalaryData({...salaryData, month: parseInt(e.target.value)})}
+                            >
+                               {Array.from({length: 12}, (_, i) => (
+                                 <option key={i+1} value={i+1}>{new Date(0, i).toLocaleString('en-US', {month: 'long'})}</option>
+                               ))}
+                            </select>
+                         </div>
+                         <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Year</label>
+                            <select 
+                              className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white font-black text-[10px] uppercase tracking-widest"
+                              value={salaryData.year}
+                              onChange={(e) => setSalaryData({...salaryData, year: parseInt(e.target.value)})}
+                            >
+                               {[2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                         </div>
+                      </div>
+                      <div className="space-y-2">
+                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Payout Amount ($)</label>
+                         <div className="relative">
+                            <DollarSign className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                            <input 
+                              required type="number"
+                              className="w-full pl-14 pr-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white font-bold text-sm"
+                              value={salaryData.amount}
+                              onChange={(e) => setSalaryData({...salaryData, amount: e.target.value})}
+                            />
+                         </div>
+                      </div>
+                      <button 
+                        type="submit" 
+                        disabled={createLoading}
+                        className="w-full py-5 bg-mint-500 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-mint-600 transition-all shadow-xl shadow-mint-500/10 disabled:opacity-50"
+                      >
+                         {createLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirm Payment'}
+                      </button>
+                   </form>
+                 )}
               </div>
            </div>
         </div>

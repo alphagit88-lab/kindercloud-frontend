@@ -31,6 +31,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
+      const token = localStorage.getItem('auth_token');
+      console.log(`[AuthCheck] Token found in storage: ${token ? 'Yes (starts with ' + token.substring(0, 10) + '...)' : 'No'}`);
+      
       const { user } = await authAPI.getCurrentUser();
       setUser(user);
     } catch {
@@ -42,6 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const response = await authAPI.login({ email, password });
+    if (response.token) {
+      localStorage.setItem('auth_token', response.token);
+    }
     setUser(response.user);
     return response.user;
   };
@@ -54,12 +60,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role?: 'kid' | 'teacher' | 'parent' | 'admin';
   }) => {
     const response = await authAPI.register(data);
+    if (response.token) {
+      localStorage.setItem('auth_token', response.token);
+    }
     setUser(response.user);
     return response.user;
   };
 
   const logout = async () => {
     await authAPI.logout();
+    localStorage.removeItem('auth_token');
     setUser(null);
   };
 
