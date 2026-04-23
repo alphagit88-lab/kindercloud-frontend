@@ -1,5 +1,5 @@
-const API_BASE_URL = (typeof window !== "undefined" 
-  ? "/proxied-backend" 
+const API_BASE_URL = (typeof window !== "undefined"
+  ? "/proxied-backend"
   : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000")).replace(/\/api\/?$/, "");
 
 interface ApiOptions extends RequestInit {
@@ -9,14 +9,14 @@ interface ApiOptions extends RequestInit {
 async function apiFetch<T = any>(endpoint: string, options?: ApiOptions): Promise<{ data: T }> {
   // Ensure endpoint starts with /
   let path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  
+
   // Handle query parameters
   if (options?.params) {
     const query = Object.entries(options.params)
       .filter(([_, value]) => value !== undefined && value !== null && value !== '')
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
       .join('&');
-    
+
     if (query) {
       path += (path.includes('?') ? '&' : '?') + query;
     }
@@ -57,11 +57,11 @@ async function apiFetch<T = any>(endpoint: string, options?: ApiOptions): Promis
 
 const api = {
   get: <T = any>(endpoint: string, options?: ApiOptions) => apiFetch<T>(endpoint, { ...options, method: 'GET' }),
-  post: <T = any>(endpoint: string, data: any, options?: ApiOptions) => 
+  post: <T = any>(endpoint: string, data: any, options?: ApiOptions) =>
     apiFetch<T>(endpoint, { ...options, method: 'POST', body: JSON.stringify(data) }),
-  put: <T = any>(endpoint: string, data: any, options?: ApiOptions) => 
+  put: <T = any>(endpoint: string, data: any, options?: ApiOptions) =>
     apiFetch<T>(endpoint, { ...options, method: 'PUT', body: JSON.stringify(data) }),
-  patch: <T = any>(endpoint: string, data: any, options?: ApiOptions) => 
+  patch: <T = any>(endpoint: string, data: any, options?: ApiOptions) =>
     apiFetch<T>(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(data) }),
   delete: <T = any>(endpoint: string, options?: ApiOptions) => apiFetch<T>(endpoint, { ...options, method: 'DELETE' }),
 };
