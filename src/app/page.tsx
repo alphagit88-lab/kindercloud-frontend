@@ -60,7 +60,7 @@ const PORTALS = [
 ];
 
 export default function LandingPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   
   const getDashboardLink = () => {
     if (!user) return '/login';
@@ -92,14 +92,24 @@ export default function LandingPage() {
             <Link href="#features" className="text-sm font-black uppercase tracking-widest text-slate-500 hover:text-sky-500 transition-colors">Features</Link>
             <Link href="#portals" className="text-sm font-black uppercase tracking-widest text-slate-500 hover:text-sky-500 transition-colors">Portals</Link>
             <div className="flex items-center gap-4 border-l border-slate-200 pl-8 ml-4">
-               {user ? (
-                 <Link href={getDashboardLink()} className="bg-slate-900 text-white px-6 py-3 rounded-full font-black text-sm uppercase tracking-widest transition shadow-lg shadow-slate-900/30 active:scale-95">Dashboard</Link>
-               ) : (
-                 <>
-                   <Link href="/login" className="text-sm font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">Login</Link>
-                   <Link href="/register" className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-full font-black text-sm uppercase tracking-widest transition shadow-lg shadow-sky-500/30 active:scale-95">Get Started</Link>
-                 </>
-               )}
+                {loading ? (
+                  <div className="w-20 h-8 bg-slate-100 animate-pulse rounded-full" />
+                ) : user ? (
+                  <div className="flex items-center gap-6">
+                    <Link href={getDashboardLink()} className="bg-slate-900 text-white px-6 py-3 rounded-full font-black text-sm uppercase tracking-widest transition shadow-lg shadow-slate-900/30 active:scale-95">Dashboard</Link>
+                    <button 
+                      onClick={() => logout()}
+                      className="text-sm font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 transition-colors cursor-pointer"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Link href="/login" className="text-sm font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">Login</Link>
+                    <Link href="/register" className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-full font-black text-sm uppercase tracking-widest transition shadow-lg shadow-sky-500/30 active:scale-95">Get Started</Link>
+                  </>
+                )}
             </div>
           </div>
         </div>
@@ -124,14 +134,32 @@ export default function LandingPage() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Link 
-              href="/register" 
-              className="w-full sm:w-auto bg-linear-to-r from-sky-500 to-blue-600 text-white px-10 py-6 rounded-[2rem] font-black text-lg uppercase tracking-widest shadow-2xl shadow-sky-500/40 hover:shadow-sky-500/60 hover:scale-[1.05] active:scale-[0.95] transition-all flex items-center justify-center gap-3 group"
-            >
-              Start for Free
-              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <button className="w-full sm:w-auto px-10 py-6 text-slate-500 font-black text-lg uppercase tracking-widest hover:text-slate-900 transition-colors flex items-center gap-2">
+            {!user ? (
+              <>
+                <Link 
+                  href="/register" 
+                  className="w-full sm:w-auto bg-linear-to-r from-sky-500 to-blue-600 text-white px-10 py-6 rounded-[2rem] font-black text-lg uppercase tracking-widest shadow-2xl shadow-sky-500/40 hover:shadow-sky-500/60 hover:scale-[1.05] active:scale-[0.95] transition-all flex items-center justify-center gap-3 group"
+                >
+                  Start for Free
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link 
+                  href="/login" 
+                  className="w-full sm:w-auto bg-white border-2 border-slate-200 text-slate-900 px-10 py-6 rounded-[2rem] font-black text-lg uppercase tracking-widest hover:border-sky-500 hover:text-sky-500 transition-all flex items-center justify-center gap-2"
+                >
+                  Sign In <Smile className="w-5 h-5" />
+                </Link>
+              </>
+            ) : (
+              <Link 
+                href={getDashboardLink()} 
+                className="w-full sm:w-auto bg-slate-900 text-white px-10 py-6 rounded-[2rem] font-black text-lg uppercase tracking-widest shadow-2xl shadow-slate-900/40 hover:scale-[1.05] active:scale-[0.95] transition-all flex items-center justify-center gap-3 group"
+              >
+                Go to Dashboard
+                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            )}
+            <button className="w-full sm:w-auto px-10 py-6 text-slate-500 font-black text-lg uppercase tracking-widest hover:text-slate-900 transition-colors flex items-center justify-center gap-2">
                Watch the Demo <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
             </button>
           </div>
