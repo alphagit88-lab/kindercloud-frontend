@@ -11,7 +11,8 @@ import {
   AlertCircle,
   TrendingUp,
   Minus,
-  Edit2
+  Edit2,
+  Trash2
 } from 'lucide-react';
 import { inventoryAPI, StockItem } from '@/lib/api/inventory';
 
@@ -20,6 +21,8 @@ export default function StockManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedStockId, setSelectedStockId] = useState<string | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -34,7 +37,8 @@ export default function StockManagementPage() {
 
   const fetchStocks = async () => {
     try {
-      const data = await inventoryAPI.getStocks();
+      // Pass a timestamp to bypass browser cache (304 Not Modified)
+      const data = await inventoryAPI.getStocks({ _t: Date.now() });
       setStocks(data);
     } catch (error) {
       console.error('Failed to fetch stocks:', error);
@@ -43,27 +47,58 @@ export default function StockManagementPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleOpenCreate = () => {
+    setIsEditMode(false);
+    setSelectedStockId(null);
+    setFormData({ itemName: '', quantity: 0 });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (stock: StockItem) => {
+    setIsEditMode(true);
+    setSelectedStockId(stock.id);
+    setFormData({ itemName: stock.itemName, quantity: stock.quantity });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateLoading(true);
     try {
-      await inventoryAPI.addStock(formData);
-      setSuccessMessage('Inventory Updated Successfully!');
+      if (isEditMode && selectedStockId) {
+        await inventoryAPI.updateStock(selectedStockId, formData);
+        setSuccessMessage('Inventory Updated Successfully!');
+      } else {
+        await inventoryAPI.addStock(formData);
+        setSuccessMessage('New Item Registered Successfully!');
+      }
       setIsModalOpen(false);
       setFormData({ itemName: '', quantity: 0 });
       fetchStocks();
       setTimeout(() => setSuccessMessage(''), 5000);
     } catch (error) {
-      alert('Failed to add item');
+      alert(isEditMode ? 'Failed to update item' : 'Failed to add item');
     } finally {
       setCreateLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to remove this item from inventory?')) return;
+    try {
+      await inventoryAPI.deleteStock(id);
+      setStocks(stocks.filter(s => s.id !== id));
+      setSuccessMessage('Item Removed Successfully');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      alert('Delete failed');
     }
   };
 
   const handleUpdateQuantity = async (id: string, currentQty: number, delta: number) => {
     const newQty = Math.max(0, currentQty + delta);
     try {
-      await inventoryAPI.updateStock(id, newQty);
+      await inventoryAPI.updateStock(id, { quantity: newQty });
       setStocks(stocks.map(s => s.id === id ? { ...s, quantity: newQty } : s));
     } catch (error) {
       alert('Update failed');
@@ -101,7 +136,7 @@ export default function StockManagementPage() {
               />
            </div>
            <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenCreate}
             className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-800 shadow-xl shadow-slate-900/10 hover:scale-[1.02] active:scale-[0.98] transition-all"
            >
               <Plus className="w-5 h-5" />
@@ -201,22 +236,31 @@ export default function StockManagementPage() {
                         </td>
                         <td className="px-10 py-6">
                            <div className="flex items-center justify-end gap-2">
-                              <button 
-                                onClick={() => handleUpdateQuantity(s.id, s.quantity, -1)}
-                                className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all flex items-center justify-center"
-                              >
-                                 <Minus className="w-4 h-4" />
-                              </button>
-                              <button 
-                                onClick={() => handleUpdateQuantity(s.id, s.quantity, 1)}
-                                className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-mint-50 hover:text-mint-500 transition-all flex items-center justify-center"
-                              >
-                                 <Plus className="w-4 h-4" />
-                              </button>
-                              <button className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-indigo-50 hover:text-indigo-500 transition-all flex items-center justify-center ml-4">
-                                 <Edit2 className="w-4 h-4" />
-                              </button>
-                           </div>
+                               <button 
+                                 onClick={() => handleUpdateQuantity(s.id, s.quantity, -1)}
+                                 className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all flex items-center justify-center"
+                               >
+                                  <Minus className="w-4 h-4" />
+                               </button>
+                               <button 
+                                 onClick={() => handleUpdateQuantity(s.id, s.quantity, 1)}
+                                 className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-mint-50 hover:text-mint-500 transition-all flex items-center justify-center"
+                               >
+                                  <Plus className="w-4 h-4" />
+                               </button>
+                               <button 
+                                 onClick={() => handleOpenEdit(s)}
+                                 className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-indigo-50 hover:text-indigo-500 transition-all flex items-center justify-center ml-4"
+                               >
+                                  <Edit2 className="w-4 h-4" />
+                               </button>
+                               <button 
+                                 onClick={() => handleDelete(s.id)}
+                                 className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all flex items-center justify-center"
+                               >
+                                  <Trash2 className="w-4 h-4" />
+                               </button>
+                            </div>
                         </td>
                      </tr>
                   )) : (
@@ -238,7 +282,9 @@ export default function StockManagementPage() {
            <div className="relative w-full max-w-md bg-white h-screen shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
               <div className="p-10 border-b border-slate-50 flex items-center justify-between">
                  <div>
-                    <h2 className="text-2xl font-display font-black text-slate-900 tracking-tighter italic">Add New Item</h2>
+                    <h2 className="text-2xl font-display font-black text-slate-900 tracking-tighter italic">
+                       {isEditMode ? 'Edit Item' : 'Add New Item'}
+                    </h2>
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">KinderCloud Inventory System</p>
                  </div>
                  <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
@@ -247,7 +293,7 @@ export default function StockManagementPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-10">
-                 <form id="stock-form" onSubmit={handleCreate} className="space-y-10">
+                 <form id="stock-form" onSubmit={handleSubmit} className="space-y-10">
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Item Name</label>
                        <input 
@@ -282,7 +328,7 @@ export default function StockManagementPage() {
                       <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
                     ) : (
                       <>
-                        <span>Add to Inventory</span>
+                        <span>{isEditMode ? 'Update Inventory' : 'Add to Inventory'}</span>
                         <Package className="w-6 h-6 text-sky-500" />
                       </>
                     )}

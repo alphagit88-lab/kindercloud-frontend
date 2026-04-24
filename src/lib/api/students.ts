@@ -24,11 +24,11 @@ export interface Student {
   gender?: string;
   dateOfBirth?: string;
   admissionDate: string;
-  classRoomId?: string;
-  classRoom?: {
+  classroomIds?: string[];
+  classRooms?: Array<{
     id: string;
     name: string;
-  };
+  }>;
   medicalNotes?: string;
   address?: string;
   emergencyContact?: string;

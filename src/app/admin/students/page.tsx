@@ -35,6 +35,8 @@ export default function StudentManagementPage() {
   const [createLoading, setCreateLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [activeStep, setActiveStep] = useState(1);
+  const [lastStepChange, setLastStepChange] = useState(0);
 
   const initialFormState = {
     firstName: '',
@@ -43,7 +45,7 @@ export default function StudentManagementPage() {
     password: 'Password@123',
     gender: 'Other',
     dateOfBirth: '',
-    classRoomId: '',
+    classroomIds: [] as string[],
     address: '',
     emergencyContact: '',
     medicalNotes: '',
@@ -62,6 +64,12 @@ export default function StudentManagementPage() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (!isModalOpen) {
+      setCreateLoading(false);
+    }
+  }, [isModalOpen]);
+
   const fetchData = async () => {
     try {
       const [studentsData, classroomsData] = await Promise.all([
@@ -70,8 +78,9 @@ export default function StudentManagementPage() {
       ]);
       setStudents(studentsData);
       setClassrooms(classroomsData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch data:', error);
+      alert('Error fetching students: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -96,7 +105,7 @@ export default function StudentManagementPage() {
       password: '', // Don't show password on edit
       gender: student.gender || 'Other',
       dateOfBirth: student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : '',
-      classRoomId: student.classRoomId || '',
+      classroomIds: student.classRooms?.map(cr => cr.id) || [],
       address: student.address || '',
       emergencyContact: student.emergencyContact || '',
       medicalNotes: student.medicalNotes || '',
@@ -108,11 +117,29 @@ export default function StudentManagementPage() {
         relationship: 'Parent'
       } : initialFormState.guardianInfo
     });
+    setCreateLoading(false);
     setIsModalOpen(true);
+    setActiveStep(1);
+    setLastStepChange(Date.now());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // If user presses Enter on Step 1 or 2, just move to the next step
+    if (activeStep < 3) {
+      setActiveStep(activeStep + 1);
+      setLastStepChange(Date.now());
+      return;
+    }
+
+    // Guard against accidental double-clicks from Step 2 to Step 3
+    if (Date.now() - lastStepChange < 500) {
+      console.log("Submission blocked: too soon after step change");
+      return;
+    }
+
+    if (createLoading) return;
     setCreateLoading(true);
     try {
       if (selectedStudent) {
@@ -169,7 +196,10 @@ export default function StudentManagementPage() {
             onClick={() => {
               setSelectedStudent(null);
               setFormData(initialFormState);
+              setCreateLoading(false);
               setIsModalOpen(true);
+              setActiveStep(1);
+              setLastStepChange(Date.now());
             }}
             className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-800 shadow-xl shadow-slate-900/10 hover:scale-[1.02] active:scale-[0.98] transition-all"
            >
@@ -251,9 +281,15 @@ export default function StudentManagementPage() {
                     </div>
                   </td>
                   <td className="px-10 py-6">
-                    <div className="flex items-center gap-2">
-                       <div className="w-2 h-2 rounded-full bg-sky-500" />
-                       <span className="font-bold text-slate-600 text-sm italic">{s.classRoom?.name || 'Unassigned'}</span>
+                    <div className="flex flex-wrap gap-2">
+                       {s.classRooms && s.classRooms.length > 0 ? s.classRooms.map(cr => (
+                         <div key={cr.id} className="flex items-center gap-1.5 px-3 py-1 bg-sky-50 text-sky-600 rounded-full text-[10px] font-black uppercase tracking-tight border border-sky-100">
+                           <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+                           {cr.name}
+                         </div>
+                       )) : (
+                         <span className="font-bold text-slate-400 text-[10px] uppercase italic">Unassigned</span>
+                       )}
                     </div>
                   </td>
                   <td className="px-10 py-6">
@@ -308,162 +344,240 @@ export default function StudentManagementPage() {
                  </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-10 space-y-12">
-                 <form id="enrollment-form" onSubmit={handleSubmit} className="space-y-10">
+              <div className="flex-1 overflow-y-auto p-10">
+                 {/* Step Indicator */}
+                 <div className="flex items-center justify-between mb-12 relative px-4">
+                    <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-50 -translate-y-1/2 z-0" />
+                    {[1, 2, 3].map((step) => (
+                      <div 
+                        key={step} 
+                        className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center font-black text-sm transition-all duration-500 border-2 ${
+                          activeStep >= step 
+                            ? 'bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/20' 
+                            : 'bg-white border-slate-100 text-slate-300'
+                        }`}
+                      >
+                        {step}
+                      </div>
+                    ))}
+                 </div>
+
+                 <form id="enrollment-form" onSubmit={handleSubmit} className="space-y-12">
                     
-                    {/* Student Details Section */}
-                    <div className="space-y-6">
-                       <div className="flex items-center gap-3">
-                          <Baby className="w-5 h-5 text-rose-500" />
-                          <h3 className="font-black text-sm uppercase tracking-widest text-slate-400 italic">Student Information</h3>
-                       </div>
-                       <div className="grid grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">First Name</label>
-                             <input 
-                              required
-                              className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
-                              value={formData.firstName}
-                              onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                             />
-                          </div>
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Last Name</label>
-                             <input 
-                              required
-                              className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
-                              value={formData.lastName}
-                              onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                             />
-                          </div>
-                       </div>
-                       <div className="grid grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Kid's Email (Unique)</label>
-                             <input 
-                              required type="email" 
-                              className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
-                              value={formData.email}
-                              onChange={(e) => setFormData({...formData, email: e.target.value})}
-                             />
-                          </div>
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Gender</label>
-                             <select 
-                              className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-black text-[11px] uppercase tracking-widest outline-none transition-all cursor-pointer"
-                              value={formData.gender}
-                              onChange={(e) => setFormData({...formData, gender: e.target.value})}
-                             >
-                                <option>Male</option>
-                                <option>Female</option>
-                                <option>Other</option>
-                             </select>
-                          </div>
-                       </div>
-                       <div className="grid grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1"><Calendar className="w-3 h-3" /> Date of Birth</label>
-                             <input 
-                              type="date" 
-                              className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
-                              value={formData.dateOfBirth}
-                              onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
-                             />
-                          </div>
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Classroom Allocation</label>
-                             <select 
-                              required
-                              className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-black text-[11px] uppercase tracking-widest outline-none transition-all cursor-pointer"
-                              value={formData.classRoomId}
-                              onChange={(e) => setFormData({...formData, classRoomId: e.target.value})}
-                             >
-                                <option value="">Select a Class</option>
-                                {classrooms.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                             </select>
-                          </div>
-                       </div>
-                    </div>
+                    {/* Step 1: Student Information */}
+                    {activeStep === 1 && (
+                      <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
+                         <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500">
+                               <Baby className="w-5 h-5" />
+                            </div>
+                            <h3 className="font-black text-sm uppercase tracking-widest text-slate-900 italic">Student Details</h3>
+                         </div>
+                         
+                         <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">First Name</label>
+                               <input 
+                                required
+                                className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
+                                value={formData.firstName}
+                                onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                               />
+                            </div>
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Last Name</label>
+                               <input 
+                                required
+                                className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
+                                value={formData.lastName}
+                                onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                               />
+                            </div>
+                         </div>
 
-                    {/* Guardian Section */}
-                    <div className="space-y-6 pt-6 border-t border-slate-50">
-                       <div className="flex items-center gap-3">
-                          <Heart className="w-5 h-5 text-sky-500" />
-                          <h3 className="font-black text-sm uppercase tracking-widest text-slate-400 italic">Guardian Connection</h3>
-                       </div>
-                       <div className="grid grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Guardian First Name</label>
-                             <input 
-                              className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
-                              value={formData.guardianInfo.firstName}
-                              onChange={(e) => setFormData({...formData, guardianInfo: {...formData.guardianInfo, firstName: e.target.value}})}
-                             />
-                          </div>
-                          <div className="space-y-2">
-                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Guardian Last Name</label>
-                             <input 
-                              className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
-                              value={formData.guardianInfo.lastName}
-                              onChange={(e) => setFormData({...formData, guardianInfo: {...formData.guardianInfo, lastName: e.target.value}})}
-                             />
-                          </div>
-                       </div>
-                       <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Guardian Email</label>
-                          <input 
-                           type="email" 
-                           className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
-                           value={formData.guardianInfo.email}
-                           onChange={(e) => setFormData({...formData, guardianInfo: {...formData.guardianInfo, email: e.target.value}})}
-                          />
-                       </div>
-                    </div>
+                         <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Kid's Email (Unique)</label>
+                            <input 
+                             required type="email" 
+                             className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
+                             value={formData.email}
+                             onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            />
+                         </div>
 
-                    {/* Medical & Other */}
-                    <div className="space-y-6 pt-6 border-t border-slate-50">
-                       <div className="flex items-center gap-3">
-                          <Stethoscope className="w-5 h-5 text-amber-500" />
-                          <h3 className="font-black text-sm uppercase tracking-widest text-slate-400 italic">Health & Notes</h3>
-                       </div>
-                       <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Medical/Allergy Notes</label>
-                          <textarea 
-                           className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all h-32" 
-                           placeholder="Type any allergies or medical conditions here..."
-                           value={formData.medicalNotes}
-                           onChange={(e) => setFormData({...formData, medicalNotes: e.target.value})}
-                          />
-                       </div>
-                       <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1"><MapPin className="w-3 h-3" /> Physical Address</label>
-                          <input 
-                           className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
-                           value={formData.address}
-                           onChange={(e) => setFormData({...formData, address: e.target.value})}
-                          />
-                       </div>
-                    </div>
+                         <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Gender</label>
+                               <select 
+                                className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-black text-[11px] uppercase tracking-widest outline-none transition-all cursor-pointer"
+                                value={formData.gender}
+                                onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                               >
+                                  <option>Male</option>
+                                  <option>Female</option>
+                                  <option>Other</option>
+                               </select>
+                            </div>
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1"><Calendar className="w-3 h-3" /> Birth Date</label>
+                               <input 
+                                type="date" 
+                                className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
+                                value={formData.dateOfBirth}
+                                onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
+                               />
+                            </div>
+                         </div>
+                      </div>
+                    )}
+
+                    {/* Step 2: Guardian Information */}
+                    {activeStep === 2 && (
+                      <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
+                         <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-sky-50 rounded-xl flex items-center justify-center text-sky-500">
+                               <Heart className="w-5 h-5" />
+                            </div>
+                            <h3 className="font-black text-sm uppercase tracking-widest text-slate-900 italic">Guardian Connection</h3>
+                         </div>
+                         
+                         <div className="grid grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">First Name</label>
+                               <input 
+                                className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
+                                value={formData.guardianInfo.firstName}
+                                onChange={(e) => setFormData({...formData, guardianInfo: {...formData.guardianInfo, firstName: e.target.value}})}
+                               />
+                            </div>
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Last Name</label>
+                               <input 
+                                className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
+                                value={formData.guardianInfo.lastName}
+                                onChange={(e) => setFormData({...formData, guardianInfo: {...formData.guardianInfo, lastName: e.target.value}})}
+                               />
+                            </div>
+                         </div>
+                         <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Guardian Email</label>
+                            <input 
+                             type="email" 
+                             className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
+                             value={formData.guardianInfo.email}
+                             onChange={(e) => setFormData({...formData, guardianInfo: {...formData.guardianInfo, email: e.target.value}})}
+                            />
+                         </div>
+                         <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1"><MapPin className="w-3 h-3" /> Physical Address</label>
+                            <input 
+                             className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all" 
+                             value={formData.address}
+                             onChange={(e) => setFormData({...formData, address: e.target.value})}
+                            />
+                         </div>
+                      </div>
+                    )}
+
+                    {/* Step 3: Classes & Health */}
+                    {activeStep === 3 && (
+                      <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
+                         <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
+                                  <Sparkles className="w-5 h-5" />
+                               </div>
+                               <h3 className="font-black text-sm uppercase tracking-widest text-slate-900 italic">Class Allocation</h3>
+                            </div>
+                            <div className="flex flex-wrap gap-2 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
+                               {classrooms.map(c => {
+                                 const isSelected = formData.classroomIds.includes(c.id);
+                                 return (
+                                   <button
+                                     key={c.id}
+                                     type="button"
+                                     onClick={() => {
+                                       const newIds = isSelected 
+                                         ? formData.classroomIds.filter(id => id !== c.id)
+                                         : [...formData.classroomIds, c.id];
+                                       setFormData({...formData, classroomIds: newIds});
+                                     }}
+                                     className={`px-4 py-2 rounded-xl border-2 transition-all font-black text-[10px] uppercase tracking-wider cursor-pointer active:scale-95 ${
+                                       isSelected 
+                                         ? 'bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/10 scale-105' 
+                                         : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300 hover:bg-slate-50'
+                                     }`}
+                                   >
+                                     {c.name}
+                                   </button>
+                                 );
+                                })}
+                                {classrooms.length === 0 && <p className="text-center text-[10px] font-bold text-slate-400 uppercase italic py-2">No classes found</p>}
+                            </div>
+                         </div>
+
+                         <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 bg-mint-50 rounded-xl flex items-center justify-center text-mint-500">
+                                  <Stethoscope className="w-5 h-5" />
+                               </div>
+                               <h3 className="font-black text-sm uppercase tracking-widest text-slate-900 italic">Health & Notes</h3>
+                            </div>
+                            <textarea 
+                             className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-sky-500 font-bold text-sm outline-none transition-all h-32" 
+                             placeholder="Allergies, medical conditions, or special requirements..."
+                             value={formData.medicalNotes}
+                             onChange={(e) => setFormData({...formData, medicalNotes: e.target.value})}
+                            />
+                         </div>
+                      </div>
+                    )}
 
                  </form>
               </div>
 
-              <div className="p-10 border-t border-slate-50 bg-slate-50/50">
-                 <button 
-                  form="enrollment-form"
-                  type="submit"
-                  disabled={createLoading}
-                  className="w-full bg-slate-900 text-white py-6 rounded-[2rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98] disabled:opacity-50"
-                 >
-                    {createLoading ? (
-                      <Loader2 className="w-6 h-6 animate-spin text-sky-400" />
-                    ) : (
-                      <>
-                        <span>{selectedStudent ? 'Update Student Details' : 'Finalize Student Enrollment'}</span>
-                        <CheckCircle2 className="w-6 h-6 text-mint-500" />
-                      </>
-                    )}
-                 </button>
+              <div className="p-10 border-t border-slate-50 bg-slate-50/50 flex items-center gap-4">
+                 {activeStep > 1 && (
+                    <button 
+                     type="button"
+                     onClick={() => {
+                       setActiveStep(activeStep - 1);
+                       setLastStepChange(Date.now());
+                     }}
+                     className="flex-1 bg-white text-slate-900 py-6 rounded-[2rem] font-black text-sm uppercase tracking-widest border border-slate-100 hover:bg-slate-50 transition-all active:scale-[0.98]"
+                    >
+                       Back
+                    </button>
+                 )}
+                 
+                 {activeStep < 3 ? (
+                    <button 
+                     type="button"
+                     onClick={() => {
+                       setActiveStep(activeStep + 1);
+                       setLastStepChange(Date.now());
+                     }}
+                     className="flex-[2] bg-slate-900 text-white py-6 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98]"
+                    >
+                       Continue
+                    </button>
+                 ) : (
+                   <button 
+                    form="enrollment-form"
+                    type="submit"
+                    disabled={createLoading}
+                    className="flex-[2] bg-slate-900 text-white py-6 rounded-[2rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 active:scale-[0.98] disabled:opacity-50"
+                   >
+                      {createLoading ? (
+                        <Loader2 className="w-6 h-6 animate-spin text-sky-400" />
+                      ) : (
+                        <>
+                          <span>{selectedStudent ? 'Save Changes' : 'Finalize Enrollment'}</span>
+                          <CheckCircle2 className="w-6 h-6 text-mint-500" />
+                        </>
+                      )}
+                   </button>
+                 )}
               </div>
            </div>
         </div>

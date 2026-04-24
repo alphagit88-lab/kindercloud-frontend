@@ -23,6 +23,8 @@ export default function ClassroomManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedClassRoom, setSelectedClassRoom] = useState<ClassRoom | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -50,18 +52,40 @@ export default function ClassroomManagementPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleOpenCreate = () => {
+    setIsEditMode(false);
+    setSelectedClassRoom(null);
+    setFormData({ name: '', teacherId: '' });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (classroom: ClassRoom) => {
+    setIsEditMode(true);
+    setSelectedClassRoom(classroom);
+    setFormData({ 
+      name: classroom.name, 
+      teacherId: (classroom as any).teacherId || (classroom as any).teacher?.id || '' 
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateLoading(true);
     try {
-      await classroomsAPI.create(formData);
-      setSuccessMessage('Classroom Created Successfully!');
+      if (isEditMode && selectedClassRoom) {
+        await classroomsAPI.update(selectedClassRoom.id, formData);
+        setSuccessMessage('Classroom Updated Successfully!');
+      } else {
+        await classroomsAPI.create(formData);
+        setSuccessMessage('Classroom Created Successfully!');
+      }
       setIsModalOpen(false);
       setFormData({ name: '', teacherId: '' });
       fetchData();
       setTimeout(() => setSuccessMessage(''), 5000);
     } catch (error) {
-      alert('Failed to create classroom');
+      alert(`Failed to ${isEditMode ? 'update' : 'create'} classroom`);
     } finally {
       setCreateLoading(false);
     }
@@ -108,7 +132,7 @@ export default function ClassroomManagementPage() {
               />
            </div>
            <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenCreate}
             className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-800 shadow-xl shadow-slate-900/10 hover:scale-[1.02] active:scale-[0.98] transition-all"
            >
               <Plus className="w-5 h-5" />
@@ -144,7 +168,10 @@ export default function ClassroomManagementPage() {
                         {c.name.charAt(0)}
                      </div>
                      <div className="flex gap-2">
-                        <button className="p-3 text-slate-300 hover:text-sky-500 hover:bg-sky-50 rounded-xl transition-all">
+                        <button 
+                          onClick={() => handleOpenEdit(c)}
+                          className="p-3 text-slate-300 hover:text-sky-500 hover:bg-sky-50 rounded-xl transition-all"
+                        >
                            <Edit3 className="w-5 h-5" />
                         </button>
                         <button 
@@ -187,7 +214,7 @@ export default function ClassroomManagementPage() {
            <div className="relative w-full max-w-xl bg-white h-screen shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
               <div className="p-10 border-b border-slate-50 flex items-center justify-between">
                  <div>
-                    <h2 className="text-2xl font-display font-black text-slate-900 tracking-tighter italic">Add New Classroom</h2>
+                    <h2 className="text-2xl font-display font-black text-slate-900 tracking-tighter italic">{isEditMode ? 'Edit' : 'Add New'} Classroom</h2>
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">KinderCloud Infrastructure</p>
                  </div>
                  <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
@@ -196,7 +223,7 @@ export default function ClassroomManagementPage() {
               </div>
 
               <div className="flex-1 p-10">
-                 <form id="classroom-form" onSubmit={handleCreate} className="space-y-10">
+                 <form id="classroom-form" onSubmit={handleSubmit} className="space-y-10">
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Classroom Name</label>
                        <input 
@@ -235,7 +262,7 @@ export default function ClassroomManagementPage() {
                       <Loader2 className="w-6 h-6 animate-spin text-sky-400" />
                     ) : (
                       <>
-                        <span>Establish Classroom</span>
+                        <span>{isEditMode ? 'Update' : 'Establish'} Classroom</span>
                         <CheckCircle2 className="w-6 h-6 text-mint-500" />
                       </>
                     )}

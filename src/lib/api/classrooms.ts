@@ -26,6 +26,11 @@ export const classroomsAPI = {
     return response.data;
   },
 
+  update: async (id: string, data: { name?: string; teacherId?: string }): Promise<ClassRoom> => {
+    const response = await api.put<ClassRoom>(`/api/classrooms/${id}`, data);
+    return response.data;
+  },
+
   delete: async (id: string): Promise<void> => {
     await api.delete(`/api/classrooms/${id}`);
   },

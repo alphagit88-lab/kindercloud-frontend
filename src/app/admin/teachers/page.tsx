@@ -51,6 +51,8 @@ export default function TeacherManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedTeacherToEdit, setSelectedTeacherToEdit] = useState<Teacher | null>(null);
   const [isOpsModalOpen, setIsOpsModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [opsType, setOpsType] = useState<'attendance' | 'salary'>('attendance');
@@ -98,17 +100,54 @@ export default function TeacherManagementPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleOpenCreate = () => {
+    setIsEditMode(false);
+    setSelectedTeacherToEdit(null);
+    setFormData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: 'Password@123',
+      phone: '',
+      qualification: '',
+      specialization: '',
+      baseSalary: 0
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (teacher: Teacher) => {
+    setIsEditMode(true);
+    setSelectedTeacherToEdit(teacher);
+    setFormData({
+      firstName: teacher.user.firstName,
+      lastName: teacher.user.lastName,
+      email: teacher.user.email,
+      password: '', // Don't show password on edit
+      phone: teacher.user.phone || '',
+      qualification: teacher.qualification || '',
+      specialization: teacher.specialization || '',
+      baseSalary: teacher.baseSalary || 0
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateLoading(true);
     try {
-      await teachersAPI.create(formData);
-      setSuccessMessage('Teacher Registered Successfully!');
+      if (isEditMode && selectedTeacherToEdit) {
+        await teachersAPI.update(selectedTeacherToEdit.user.id, formData);
+        setSuccessMessage('Teacher Profile Updated!');
+      } else {
+        await teachersAPI.create(formData);
+        setSuccessMessage('Teacher Registered Successfully!');
+      }
       setIsModalOpen(false);
       fetchTeachers();
       setTimeout(() => setSuccessMessage(''), 5000);
     } catch (error) {
-      alert('Failed to register teacher');
+      alert(`Failed to ${isEditMode ? 'update' : 'register'} teacher`);
     } finally {
       setCreateLoading(false);
     }
@@ -215,7 +254,7 @@ export default function TeacherManagementPage() {
               />
            </div>
            <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenCreate}
             className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-800 shadow-xl shadow-slate-900/10 hover:scale-[1.02] active:scale-[0.98] transition-all"
            >
               <Plus className="w-5 h-5" />
@@ -301,6 +340,12 @@ export default function TeacherManagementPage() {
                      </div>
                      <div className="flex gap-2">
                         <button 
+                          onClick={() => handleOpenEdit(t)}
+                          className="p-3 text-slate-300 hover:text-sky-500 hover:bg-sky-50 rounded-xl transition-all"
+                        >
+                           <Edit3 className="w-5 h-5" />
+                        </button>
+                        <button 
                           onClick={() => handleDelete(t.user.id)}
                           className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
                         >
@@ -323,7 +368,7 @@ export default function TeacherManagementPage() {
            <div className="relative w-full max-w-xl bg-white h-screen shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
               <div className="p-10 border-b border-slate-50 flex items-center justify-between">
                  <div>
-                    <h2 className="text-2xl font-display font-black text-slate-900 tracking-tighter italic">Register New Teacher</h2>
+                    <h2 className="text-2xl font-display font-black text-slate-900 tracking-tighter italic">{isEditMode ? 'Edit' : 'Register New'} Teacher</h2>
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">KinderCloud Faculty Records</p>
                  </div>
                  <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
@@ -332,29 +377,33 @@ export default function TeacherManagementPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-10 space-y-12">
-                 <form id="teacher-form" onSubmit={handleCreate} className="space-y-10">
+                 <form id="teacher-form" onSubmit={handleSubmit} className="space-y-10">
                     <div className="space-y-6">
                        <h3 className="font-black text-[10px] uppercase tracking-widest text-slate-400 italic">Personal Profile</h3>
                        <div className="grid grid-cols-2 gap-6">
                           <input 
                             required placeholder="First Name"
                             className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-amber-500 font-bold text-sm outline-none transition-all" 
+                            value={formData.firstName}
                             onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                           />
                           <input 
                             required placeholder="Last Name"
                             className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-amber-500 font-bold text-sm outline-none transition-all" 
+                            value={formData.lastName}
                             onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                           />
                        </div>
                        <input 
                         required type="email" placeholder="Professional Email"
                         className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-amber-500 font-bold text-sm outline-none transition-all" 
+                        value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
                        />
                        <input 
                         placeholder="Mobile Phone"
                         className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-amber-500 font-bold text-sm outline-none transition-all" 
+                        value={formData.phone}
                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
                        />
                     </div>
@@ -364,11 +413,13 @@ export default function TeacherManagementPage() {
                        <input 
                         placeholder="Qualification (e.g. B.Ed in Early Childhood)"
                         className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-amber-500 font-bold text-sm outline-none transition-all" 
+                        value={formData.qualification}
                         onChange={(e) => setFormData({...formData, qualification: e.target.value})}
                        />
                        <input 
                         placeholder="Specialization (e.g. Montessori, Art, Music)"
                         className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-amber-500 font-bold text-sm outline-none transition-all" 
+                        value={formData.specialization}
                         onChange={(e) => setFormData({...formData, specialization: e.target.value})}
                        />
                        <div className="space-y-2">
@@ -376,6 +427,7 @@ export default function TeacherManagementPage() {
                           <input 
                            type="number" 
                            className="w-full px-6 py-4 rounded-2xl border border-slate-100 bg-slate-50/50 focus:bg-white focus:border-amber-500 font-bold text-sm outline-none transition-all" 
+                           value={formData.baseSalary}
                            onChange={(e) => setFormData({...formData, baseSalary: Number(e.target.value)})}
                           />
                        </div>
@@ -394,7 +446,7 @@ export default function TeacherManagementPage() {
                       <Loader2 className="w-6 h-6 animate-spin text-amber-400" />
                     ) : (
                       <>
-                        <span>Finalize Teacher Registration</span>
+                        <span>{isEditMode ? 'Update Profile' : 'Finalize Teacher Registration'}</span>
                         <CheckCircle2 className="w-6 h-6 text-mint-500" />
                       </>
                     )}

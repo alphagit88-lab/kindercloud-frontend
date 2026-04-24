@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /* config options here - refreshing rewrites */
   reactCompiler: true,
   images: {
     unoptimized: process.env.NODE_ENV === 'development',

@@ -21,6 +21,8 @@ export default function AssetManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -44,26 +46,57 @@ export default function AssetManagementPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleOpenCreate = () => {
+    setIsEditMode(false);
+    setSelectedAssetId(null);
+    setFormData({ itemName: '', condition: 'good' });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (asset: Asset) => {
+    setIsEditMode(true);
+    setSelectedAssetId(asset.id);
+    setFormData({ itemName: asset.itemName, condition: asset.condition });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateLoading(true);
     try {
-      await inventoryAPI.addAsset(formData);
-      setSuccessMessage('Asset Registered Successfully!');
+      if (isEditMode && selectedAssetId) {
+        await inventoryAPI.updateAsset(selectedAssetId, formData);
+        setSuccessMessage('Asset Updated Successfully!');
+      } else {
+        await inventoryAPI.addAsset(formData);
+        setSuccessMessage('Asset Registered Successfully!');
+      }
       setIsModalOpen(false);
       setFormData({ itemName: '', condition: 'good' });
       fetchAssets();
       setTimeout(() => setSuccessMessage(''), 5000);
     } catch (error) {
-      alert('Failed to register asset');
+      alert(isEditMode ? 'Failed to update asset' : 'Failed to register asset');
     } finally {
       setCreateLoading(false);
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to remove this asset?')) return;
+    try {
+      await inventoryAPI.deleteAsset(id);
+      setAssets(assets.filter(a => a.id !== id));
+      setSuccessMessage('Asset Removed Successfully');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      alert('Delete failed');
+    }
+  };
+
   const handleUpdateCondition = async (id: string, condition: string) => {
     try {
-      await inventoryAPI.updateAsset(id, condition);
+      await inventoryAPI.updateAsset(id, { condition: condition as any });
       setAssets(assets.map(a => a.id === id ? { ...a, condition: condition as any } : a));
     } catch (error) {
       alert('Update failed');
@@ -111,7 +144,7 @@ export default function AssetManagementPage() {
               />
            </div>
            <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenCreate}
             className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-800 shadow-xl shadow-slate-900/10 hover:scale-[1.02] active:scale-[0.98] transition-all"
            >
               <Plus className="w-5 h-5" />
@@ -150,8 +183,17 @@ export default function AssetManagementPage() {
                      {getConditionIcon(a.condition)}
                   </div>
                   <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <button className="p-2 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-sky-500 transition-colors">
+                     <button 
+                      onClick={() => handleOpenEdit(a)}
+                      className="p-2 hover:bg-slate-50 rounded-lg text-slate-400 hover:text-sky-500 transition-colors"
+                     >
                         <Wrench className="w-4 h-4" />
+                     </button>
+                     <button 
+                      onClick={() => handleDelete(a.id)}
+                      className="p-2 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-500 transition-colors"
+                     >
+                        <Trash2 className="w-4 h-4" />
                      </button>
                   </div>
                </div>
@@ -194,7 +236,9 @@ export default function AssetManagementPage() {
            <div className="relative w-full max-w-md bg-white h-screen shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
               <div className="p-10 border-b border-slate-50 flex items-center justify-between">
                  <div>
-                    <h2 className="text-2xl font-display font-black text-slate-900 tracking-tighter italic">Register Asset</h2>
+                    <h2 className="text-2xl font-display font-black text-slate-900 tracking-tighter italic">
+                        {isEditMode ? 'Edit Asset' : 'Register Asset'}
+                    </h2>
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">KinderCloud Asset Control</p>
                  </div>
                  <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
@@ -203,7 +247,7 @@ export default function AssetManagementPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-10">
-                 <form id="asset-form" onSubmit={handleCreate} className="space-y-10">
+                 <form id="asset-form" onSubmit={handleSubmit} className="space-y-10">
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Asset Name</label>
                        <input 
@@ -242,7 +286,7 @@ export default function AssetManagementPage() {
                       <Loader2 className="w-6 h-6 animate-spin text-sky-400" />
                     ) : (
                       <>
-                        <span>Add to Registry</span>
+                        <span>{isEditMode ? 'Update Asset' : 'Add to Registry'}</span>
                         <Database className="w-6 h-6 text-sky-500" />
                       </>
                     )}
