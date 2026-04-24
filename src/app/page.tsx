@@ -92,9 +92,7 @@ export default function LandingPage() {
             <Link href="#features" className="text-sm font-black uppercase tracking-widest text-slate-500 hover:text-sky-500 transition-colors">Features</Link>
             <Link href="#portals" className="text-sm font-black uppercase tracking-widest text-slate-500 hover:text-sky-500 transition-colors">Portals</Link>
             <div className="flex items-center gap-4 border-l border-slate-200 pl-8 ml-4">
-               {loading ? (
-                 <div className="w-12 h-6 bg-slate-100 animate-pulse rounded-full" />
-               ) : user ? (
+               {user ? (
                  <Link href={getDashboardLink()} className="bg-slate-900 text-white px-6 py-3 rounded-full font-black text-sm uppercase tracking-widest transition shadow-lg shadow-slate-900/30 active:scale-95">Dashboard</Link>
                ) : (
                  <>

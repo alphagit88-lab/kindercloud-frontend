@@ -62,6 +62,12 @@ export const teachersAPI = {
     const response = await api.post('/api/teachers', data);
     return response.data;
   },
+  update: async (userId: string, data: any) => {
+    // Teachers are usually updated via the student/teacher specific endpoints 
+    // which internally update the User entity.
+    const response = await api.put(`/api/teachers/${userId}`, data);
+    return response.data;
+  },
   delete: async (id: string) => {
     const response = await api.delete(`/api/teachers/${id}`);
     return response.data;
