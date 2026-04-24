@@ -37,7 +37,7 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout, user } = useAuth();
+  const { logout, user, loading } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -45,10 +45,37 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    if (user === null) {
-      router.push('/login');
+    if (!loading) {
+      if (!user) {
+        router.push('/login');
+      } else if (user.role !== 'admin') {
+        // Redirect to their respective dashboard if not an admin
+        const redirectMap: Record<string, string> = {
+          teacher: '/teacher',
+          parent: '/parent',
+          kid: '/kid',
+        };
+        router.push(redirectMap[user.role] || '/');
+      }
     }
-  }, [user, router]);
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 bg-sky-500 rounded-2xl flex items-center justify-center text-white animate-bounce shadow-xl shadow-sky-500/20">
+            <Cloud className="w-8 h-8 fill-white" />
+          </div>
+          <p className="text-sm font-black text-slate-400 uppercase tracking-widest animate-pulse">Entering Control Center...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
 
   return (
     <div className="flex h-screen bg-[#f8fafc] font-sans">

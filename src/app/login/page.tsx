@@ -56,6 +56,17 @@ export default function LoginPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen kinder-bg flex items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 animate-spin text-sky-500" />
+          <p className="text-sm font-black text-slate-400 uppercase tracking-widest animate-pulse">Verifying Session...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen kinder-bg flex items-center justify-center p-6 font-sans">
       <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 bg-white/70 backdrop-blur-3xl rounded-[3rem] shadow-[0_32px_120px_-20px_rgba(0,0,0,0.1)] border border-white/50 overflow-hidden">

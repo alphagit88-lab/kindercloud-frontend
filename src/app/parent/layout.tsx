@@ -28,12 +28,34 @@ export default function ParentLayout({ children }: { children: ReactNode }) {
       if (!user) {
         router.push('/login');
       } else if (user.role !== 'parent' && user.role !== 'admin') {
-        router.push('/login');
+        const redirectMap: Record<string, string> = {
+          admin: '/admin',
+          teacher: '/teacher',
+          kid: '/kid',
+        };
+        router.push(redirectMap[user.role] || '/');
       } else {
         fetchChildren();
       }
     }
   }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#f0f9ff]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 bg-sky-500 rounded-2xl flex items-center justify-center text-white animate-bounce shadow-xl shadow-sky-500/20">
+            <Heart className="w-8 h-8 fill-white" />
+          </div>
+          <p className="text-sm font-black text-sky-400 uppercase tracking-widest animate-pulse">Connecting to your Magic Circle...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || (user.role !== 'parent' && user.role !== 'admin')) {
+    return null;
+  }
 
   const fetchChildren = async () => {
     try {
