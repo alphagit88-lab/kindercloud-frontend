@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode, useEffect } from "react";
-import { LogOut } from "lucide-react";
+import { LogOut, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
@@ -11,10 +11,36 @@ export default function KidLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
+    if (!loading) {
+      if (!user) {
+        router.push('/login');
+      } else if (user.role !== 'kid' && user.role !== 'admin') {
+        const redirectMap: Record<string, string> = {
+          admin: '/admin',
+          teacher: '/teacher',
+          parent: '/parent',
+        };
+        router.push(redirectMap[user.role] || '/');
+      }
     }
   }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#FFFDF0]">
+        <div className="flex flex-col items-center gap-6">
+          <div className="w-24 h-24 bg-amber-400 rounded-full border-8 border-white flex items-center justify-center text-white animate-bounce shadow-2xl">
+             <Sparkles className="w-12 h-12" />
+          </div>
+          <p className="text-2xl font-black text-amber-500 tracking-tighter uppercase italic animate-pulse">Entering Magic Sandbox...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || (user.role !== 'kid' && user.role !== 'admin')) {
+    return null;
+  }
 
   return (
     <div className="flex h-screen bg-[#FFFDF0] dark:bg-neutral-900 overflow-hidden font-sans select-none">
