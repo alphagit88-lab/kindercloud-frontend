@@ -11,7 +11,8 @@ import {
   Calendar,
   Trash2,
   Home,
-  MapPin
+  MapPin,
+  Edit2
 } from 'lucide-react';
 import { timetableAPI, TimeTableEntry } from '@/lib/api/timetable';
 import { classroomsAPI, ClassRoom } from '@/lib/api/classrooms';
@@ -22,6 +23,8 @@ export default function TimetableManagementPage() {
   const [schedule, setSchedule] = useState<TimeTableEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -69,24 +72,52 @@ export default function TimetableManagementPage() {
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleEdit = (entry: TimeTableEntry) => {
+    setFormData({
+      dayOfWeek: entry.dayOfWeek,
+      startTime: entry.startTime,
+      endTime: entry.endTime,
+      activity: entry.activity,
+      location: entry.location || ''
+    });
+    setEditingId(entry.id);
+    setIsEditing(true);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateLoading(true);
     try {
-      await timetableAPI.addEntry({
-        ...formData,
-        classRoomId: selectedClassId
-      });
-      setSuccessMessage('Timetable Entry Added!');
+      if (isEditing && editingId) {
+        await timetableAPI.updateEntry(editingId, {
+          ...formData,
+          classRoomId: selectedClassId
+        });
+        setSuccessMessage('Timetable Entry Updated!');
+      } else {
+        await timetableAPI.addEntry({
+          ...formData,
+          classRoomId: selectedClassId
+        });
+        setSuccessMessage('Timetable Entry Added!');
+      }
+      
       setIsModalOpen(false);
-      setFormData({ dayOfWeek: 'Monday', startTime: '', endTime: '', activity: '', location: '' });
+      resetForm();
       fetchSchedule();
       setTimeout(() => setSuccessMessage(''), 5000);
     } catch (error) {
-      alert('Failed to add entry');
+      alert(isEditing ? 'Failed to update entry' : 'Failed to add entry');
     } finally {
       setCreateLoading(false);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({ dayOfWeek: 'Monday', startTime: '', endTime: '', activity: '', location: '' });
+    setIsEditing(false);
+    setEditingId(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -130,7 +161,10 @@ export default function TimetableManagementPage() {
               </div>
            </div>
            <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              resetForm();
+              setIsModalOpen(true);
+            }}
             className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-slate-800 shadow-xl shadow-slate-900/10 hover:scale-[1.02] active:scale-[0.98] transition-all"
            >
               <Plus className="w-5 h-5" />
@@ -171,12 +205,20 @@ export default function TimetableManagementPage() {
                             <span className="text-[10px] font-black text-amber-600 uppercase tracking-tight">
                                {entry.startTime} - {entry.endTime}
                             </span>
-                            <button 
-                              onClick={() => handleDelete(entry.id)}
-                              className="p-1.5 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
-                            >
-                               <Trash2 className="w-3 h-3" />
-                            </button>
+                            <div className="flex items-center gap-1">
+                               <button 
+                                 onClick={() => handleEdit(entry)}
+                                 className="p-1.5 text-slate-300 hover:text-sky-500 opacity-0 group-hover:opacity-100 transition-all"
+                               >
+                                  <Edit2 className="w-3 h-3" />
+                               </button>
+                               <button 
+                                 onClick={() => handleDelete(entry.id)}
+                                 className="p-1.5 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
+                               >
+                                  <Trash2 className="w-3 h-3" />
+                               </button>
+                            </div>
                          </div>
                          <h4 className="text-xs font-black text-slate-800 leading-tight mb-2">{entry.activity}</h4>
                          {entry.location && (
@@ -206,7 +248,9 @@ export default function TimetableManagementPage() {
            <div className="relative w-full max-w-md bg-white h-screen shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
               <div className="p-10 border-b border-slate-50 flex items-center justify-between">
                  <div>
-                    <h2 className="text-2xl font-display font-black text-slate-900 tracking-tighter italic">New Timetable Entry</h2>
+                    <h2 className="text-2xl font-display font-black text-slate-900 tracking-tighter italic">
+                      {isEditing ? 'Edit Entry' : 'New Timetable Entry'}
+                    </h2>
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">KinderCloud Scheduling System</p>
                  </div>
                  <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-slate-50 rounded-2xl transition-colors">
@@ -215,7 +259,7 @@ export default function TimetableManagementPage() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-10">
-                 <form id="timetable-form" onSubmit={handleCreate} className="space-y-10">
+                 <form id="timetable-form" onSubmit={handleSubmit} className="space-y-10">
                     <div className="space-y-2">
                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Day</label>
                        <select 
@@ -283,7 +327,7 @@ export default function TimetableManagementPage() {
                       <Loader2 className="w-6 h-6 animate-spin text-amber-400" />
                     ) : (
                       <>
-                        <span>Save to Timetable</span>
+                        <span>{isEditing ? 'Update Entry' : 'Save to Timetable'}</span>
                         <CheckCircle2 className="w-6 h-6 text-mint-500" />
                       </>
                     )}
