@@ -26,17 +26,17 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      const redirectMap: Record<string, string> = {
-        admin: '/admin',
-        teacher: '/teacher',
-        parent: '/parent',
-        kid: '/kid',
-      };
-      router.push(redirectMap[user.role] || '/dashboard');
-    }
-  }, [user, authLoading, router]);
+  // useEffect(() => {
+  //   if (!authLoading && user) {
+  //     const redirectMap: Record<string, string> = {
+  //       admin: '/admin',
+  //       teacher: '/teacher',
+  //       parent: '/parent',
+  //       kid: '/kid',
+  //     };
+  //     router.push(redirectMap[user.role] || '/dashboard');
+  //   }
+  // }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +44,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
+      const user = await login(formData.email, formData.password);
+      if (user) {
+        const redirectMap: Record<string, string> = {
+          admin: '/admin',
+          teacher: '/teacher',
+          parent: '/parent',
+          kid: '/kid',
+        };
+        router.push(redirectMap[user.role] || '/dashboard');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid credentials. Please try again.');
     } finally {
