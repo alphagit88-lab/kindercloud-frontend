@@ -21,6 +21,11 @@ export const timetableAPI = {
     return response.data;
   },
 
+  updateEntry: async (id: string, data: Partial<TimeTableEntry>): Promise<TimeTableEntry> => {
+    const response = await api.put<TimeTableEntry>(`/api/timetable/${id}`, data);
+    return response.data;
+  },
+
   deleteEntry: async (id: string): Promise<void> => {
     await api.delete(`/api/timetable/${id}`);
   }
