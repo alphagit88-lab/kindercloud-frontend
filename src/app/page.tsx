@@ -91,25 +91,9 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center gap-10">
             <Link href="#features" className="text-sm font-black uppercase tracking-widest text-slate-500 hover:text-sky-500 transition-colors">Features</Link>
             <Link href="#portals" className="text-sm font-black uppercase tracking-widest text-slate-500 hover:text-sky-500 transition-colors">Portals</Link>
-            <div className="flex items-center gap-4 border-l border-slate-200 pl-8 ml-4">
-                {loading ? (
-                  <div className="w-20 h-8 bg-slate-100 animate-pulse rounded-full" />
-                ) : user ? (
-                  <div className="flex items-center gap-6">
-                    <Link href={getDashboardLink()} className="bg-slate-900 text-white px-6 py-3 rounded-full font-black text-sm uppercase tracking-widest transition shadow-lg shadow-slate-900/30 active:scale-95">Dashboard</Link>
-                    <button 
-                      onClick={() => logout()}
-                      className="text-sm font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 transition-colors cursor-pointer"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <Link href="/login" className="text-sm font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">Login</Link>
-                    <Link href="/register" className="bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-full font-black text-sm uppercase tracking-widest transition shadow-lg shadow-sky-500/30 active:scale-95">Get Started</Link>
-                  </>
-                )}
+            <div className="flex items-center gap-8 border-l border-slate-200 pl-8 ml-4">
+                <Link href="/login" className="text-sm font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">Login</Link>
+                <Link href="/register" className="bg-sky-500 hover:bg-sky-600 text-white px-10 py-3 rounded-full font-black text-sm uppercase tracking-widest transition shadow-lg shadow-sky-500/30 active:scale-95">Get Started</Link>
             </div>
           </div>
         </div>
@@ -134,31 +118,14 @@ export default function LandingPage() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            {!user ? (
-              <>
-                <Link 
-                  href="/register" 
-                  className="w-full sm:w-auto bg-linear-to-r from-sky-500 to-blue-600 text-white px-10 py-6 rounded-[2rem] font-black text-lg uppercase tracking-widest shadow-2xl shadow-sky-500/40 hover:shadow-sky-500/60 hover:scale-[1.05] active:scale-[0.95] transition-all flex items-center justify-center gap-3 group"
-                >
-                  Start for Free
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link 
-                  href="/login" 
-                  className="w-full sm:w-auto bg-white border-2 border-slate-200 text-slate-900 px-10 py-6 rounded-[2rem] font-black text-lg uppercase tracking-widest hover:border-sky-500 hover:text-sky-500 transition-all flex items-center justify-center gap-2"
-                >
-                  Sign In <Smile className="w-5 h-5" />
-                </Link>
-              </>
-            ) : (
-              <Link 
-                href={getDashboardLink()} 
-                className="w-full sm:w-auto bg-slate-900 text-white px-10 py-6 rounded-[2rem] font-black text-lg uppercase tracking-widest shadow-2xl shadow-slate-900/40 hover:scale-[1.05] active:scale-[0.95] transition-all flex items-center justify-center gap-3 group"
-              >
-                Go to Dashboard
-                <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            )}
+            <Link 
+              href="/register" 
+              className="w-full sm:w-auto bg-linear-to-r from-sky-500 to-blue-600 text-white px-10 py-6 rounded-[2rem] font-black text-lg uppercase tracking-widest shadow-2xl shadow-sky-500/40 hover:shadow-sky-500/60 hover:scale-[1.05] active:scale-[0.95] transition-all flex items-center justify-center gap-3 group"
+            >
+              Start for Free
+              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            
             <button className="w-full sm:w-auto px-10 py-6 text-slate-500 font-black text-lg uppercase tracking-widest hover:text-slate-900 transition-colors flex items-center justify-center gap-2">
                Watch the Demo <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
             </button>
@@ -219,8 +186,82 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Features Grid (Functions) */}
+      <section id="features" className="py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
+            <div className="max-w-2xl">
+              <h2 className="text-4xl sm:text-6xl font-display font-black text-slate-900 tracking-tight mb-6">
+                Magical <span className="text-sky-500">Functions</span> for Modern Preschools
+              </h2>
+              <p className="text-xl font-bold text-slate-500 leading-relaxed">
+                We've built everything you need to run a world-class early learning center, from attendance to activity tracking.
+              </p>
+            </div>
+            <Link href="/register" className="group flex items-center gap-2 font-black uppercase text-xs tracking-widest text-sky-500 hover:text-sky-600 transition-colors">
+               Explore all features <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+            {[
+              {
+                title: 'Smart Attendance',
+                desc: 'Automated check-ins and real-time headcounts for maximum safety and security.',
+                icon: CheckCircle2,
+                accent: 'text-sky-500',
+                bg: 'bg-sky-50'
+              },
+              {
+                title: 'Instant Messaging',
+                desc: 'Direct, secure communication between teachers and parents with photo sharing.',
+                icon: MessageCircle,
+                accent: 'text-rose-500',
+                bg: 'bg-rose-50'
+              },
+              {
+                title: 'Lesson Wizard',
+                desc: 'Create magical curriculum plans with our AI-assisted lesson builder.',
+                icon: Sparkles,
+                accent: 'text-amber-500',
+                bg: 'bg-amber-50'
+              },
+              {
+                title: 'Daily Reports',
+                desc: 'Auto-generate beautiful activity logs sent straight to parents\' phones.',
+                icon: Layout,
+                accent: 'text-emerald-500',
+                bg: 'bg-emerald-50'
+              },
+              {
+                title: 'Event Calendar',
+                desc: 'Keep the whole school community in sync with shared calendars and RSVPs.',
+                icon: Calendar,
+                accent: 'text-indigo-500',
+                bg: 'bg-indigo-50'
+              },
+              {
+                title: 'Asset Tracking',
+                desc: 'Manage school resources, toys, and supplies with enterprise-grade tracking.',
+                icon: Zap,
+                accent: 'text-orange-500',
+                bg: 'bg-orange-50'
+              }
+            ].map((feature, idx) => (
+              <div key={idx} className="group p-8 rounded-[2.5rem] bg-white border border-slate-100 hover:border-sky-100 hover:shadow-2xl hover:shadow-sky-500/10 transition-all">
+                <div className={`w-14 h-14 ${feature.bg} rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform`}>
+                   <feature.icon className={`w-6 h-6 ${feature.accent}`} />
+                </div>
+                <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">{feature.title}</h3>
+                <p className="text-slate-500 font-bold leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Stats/Features Banner */}
-      <section id="features" className="py-24 border-y border-slate-100">
+      <section className="py-24 border-y border-slate-100 bg-slate-50/30">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-12 text-center">
            {[
              { label: 'Cloud Users', value: '25,000+', icon: Users },
