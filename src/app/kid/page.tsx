@@ -42,6 +42,12 @@ export default function KidRoomPage() {
              <span className="bg-white/20 px-4 py-2 rounded-full font-black text-xs uppercase tracking-widest">Coming Soon!</span>
           </div>
 
+          <Link href="/kid/messages" className="group bg-violet-400 hover:bg-violet-500 text-white rounded-[3rem] p-10 flex flex-col items-center justify-center gap-6 shadow-xl border-8 border-violet-300 hover:scale-105 transition-all active:scale-95 text-center">
+             <Star className="w-24 h-24 text-violet-100 group-hover:rotate-12 transition-transform" />
+             <h2 className="text-5xl font-black uppercase italic tracking-tighter">Messages</h2>
+             <span className="bg-white/20 px-6 py-2 rounded-full font-black text-lg uppercase tracking-widest">Talk to Teacher!</span>
+          </Link>
+
           <div className="group bg-amber-400 hover:bg-amber-500 text-white rounded-[3rem] p-10 flex flex-col items-center justify-center gap-6 shadow-xl border-8 border-amber-300 hover:scale-105 transition-all active:scale-95 text-center opacity-70">
              <Puzzle className="w-24 h-24 text-amber-100 group-hover:scale-110 transition-transform" />
              <h2 className="text-5xl font-black uppercase italic tracking-tighter">Games</h2>

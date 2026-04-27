@@ -17,7 +17,8 @@ import {
   ChevronRight,
   Sparkles,
   Home,
-  Clock
+  Clock,
+  MessageCircle
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -32,6 +33,7 @@ const NAV_ITEMS = [
   { label: 'Attendance Logs', icon: Clock, path: '/admin/attendance', color: 'sky' },
   { label: 'Class Timetable', icon: Clock, path: '/admin/timetable', color: 'amber' },
   { label: 'School Events', icon: Calendar, path: '/admin/events', color: 'rose' },
+  { label: 'Messages', icon: MessageCircle, path: '/admin/messages', color: 'sky' },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

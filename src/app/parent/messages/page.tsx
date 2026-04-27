@@ -15,12 +15,14 @@ import {
 } from 'lucide-react';
 import { messagesAPI, Message, UserSummary } from '@/lib/api/messages';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSocket } from '@/contexts/SocketContext';
 import { format } from 'date-fns';
 
 type Category = 'admin' | 'teacher';
 
 export default function ParentMessagesPage() {
   const { user: currentUser } = useAuth();
+  const { socket } = useSocket();
   const [conversations, setConversations] = useState<UserSummary[]>([]);
   const [selectedRecipient, setSelectedRecipient] = useState<UserSummary | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -48,6 +50,27 @@ export default function ParentMessagesPage() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (socket) {
+      const handleNewMessage = (msg: Message) => {
+        if (selectedRecipient?.id === msg.senderId) {
+          setMessages(prev => [...prev, msg]);
+        }
+        
+        setConversations(prev => {
+          const otherUser = msg.senderId === currentUser?.id ? msg.receiver : msg.sender;
+          const filtered = prev.filter(c => c.id !== otherUser.id);
+          return [otherUser, ...filtered];
+        });
+      };
+
+      socket.on('new_message', handleNewMessage);
+      return () => {
+        socket.off('new_message', handleNewMessage);
+      };
+    }
+  }, [socket, selectedRecipient?.id, currentUser?.id]);
 
   const fetchConversations = async () => {
     try {
